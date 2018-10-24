@@ -1,0 +1,10 @@
+language: csharp
+solution: health-dashboard.sln
+mono: none
+dotnet: 2.1
+
+script:
+- dotnet restore
+
+notifications:
+    slack: sem5640-2018:QpZDGa0p8DOsuIzZBZn1jK0C
