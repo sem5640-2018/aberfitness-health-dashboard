@@ -3,7 +3,7 @@ AberFitness Health Dashboard Microservice
 
 # Maintained by
 * Charlie 
-* Andrew
+* Andrew 
 
 # Objectives
 * Pull data from the health-data-repository microservice
