@@ -8,7 +8,7 @@ using health_dashboard.Models;
 
 namespace health_dashboard.Controllers
 {
-    public class HomeController : Controller
+    public class DashboardController : Controller
     {
         public IActionResult Admin()
         {
