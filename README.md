@@ -1,6 +1,11 @@
 # health-dashboard
 AberFitness Health Dashboard Microservice
 
+| Branch | Status |
+|-|-|
+| Development | [![Development Build Status](https://travis-ci.org/sem5640-2018/health-dashboard.svg?branch=development)](https://travis-ci.org/sem5640-2018/health-dashboard) |
+| Release | [![Release Build Status](https://travis-ci.org/sem5640-2018/health-dashboard.svg?branch=master)](https://travis-ci.org/sem5640-2018/health-dashboard) |
+
 # Maintained by
 * Charlie 
 * Andrew
