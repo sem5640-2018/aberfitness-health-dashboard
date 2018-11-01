@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using health_dashboard.Models;
+using Newtonsoft.Json;
 
 namespace health_dashboard.Controllers
 {
@@ -22,7 +23,10 @@ namespace health_dashboard.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            string json = System.IO.File.ReadAllText("./exampleData.json");
+            List<object> activity = (List<object>)JsonConvert.DeserializeObject(json, typeof(List<object>));
+
+            return View(activity);
         }
 
         public IActionResult Input()
