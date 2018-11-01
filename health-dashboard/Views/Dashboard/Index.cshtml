@@ -3,6 +3,26 @@
 }
 <h2>@ViewData["Title"]</h2>
 
-<p>This is a default file.</p>
+@foreach (var day in Model)
+{
+    <div class="card" style="18rem;">
+        <div class="card-body" style="18rem;">
+            <h5 class="card-title">@day.date</h5>
+            <ul class="card-text">
+                @foreach (var activity in day.activity_data)
+                {
+                    @if (activity.activity_type != "Steps")
+                    {
+                        <li>@activity.activity_type - @activity.duration</li>
+                    }
+                    else
+                    {
+                        <li>@activity.activity_type - @activity.quantity</li>
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+}
 
 <marquee>Skidaddle skidoodle, your view is now a noodle!</marquee>
