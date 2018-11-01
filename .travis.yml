@@ -3,6 +3,12 @@ solution: health-dashboard.sln
 mono: none
 dotnet: 2.1
 
+# Specify which branches can be built on PR merge
+branches:
+  only:
+    - master
+    - development
+
 script:
 - dotnet restore
 
