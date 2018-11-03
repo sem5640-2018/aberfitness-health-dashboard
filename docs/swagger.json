@@ -1,0 +1,43 @@
+{
+   "swagger":"2.0",
+   "info":{
+      "description":"Health Dashboard API.",
+      "version":"1.0.0",
+      "title":"health-dashboard",
+   },
+   "tags":[
+      {
+         "name":"status",
+         "description":"Check status of the health-dashboard microservice.",
+      },
+   ],
+   "schemes":[
+      "https",
+      "http"
+   ],
+   "paths":{
+      "/status":{
+         "get":{
+            "tags":[
+               "status"
+            ],
+            "summary":"Check status of the health-dashboard microservice.",
+            "description":"",
+            "operationId":"status",
+            "consumes":[
+               "application/json",
+               "application/xml"
+            ],
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "responses":{
+              "200": {
+                "description": "OK"
+              }
+            },
+         }
+      },
+   },
+}
