@@ -1,28 +1,226 @@
 ﻿@{
     ViewData["Title"] = "Index";
 }
+
 <h2>@ViewData["Title"]</h2>
 
-@foreach (var day in Model)
-{
-    <div class="card" style="18rem;">
-        <div class="card-body" style="18rem;">
-            <h5 class="card-title">@day.date</h5>
-            <ul class="card-text">
-                @foreach (var activity in day.activity_data)
+<!-- top tiles -->
+<div class="row tile_count">
+    @foreach (var day in Model.Activities)
+    {
+        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+            <span class="count_top"><i class="fa fa-map-pin"></i> Steps - @day.date</span>
+            @foreach (var activity in day.activity_data)
+            {
+                @if (activity.activity_type == "Steps")
                 {
-                    @if (activity.activity_type != "Steps")
-                    {
-                        <li>@activity.activity_type - @activity.duration</li>
-                    }
-                    else
-                    {
-                        <li>@activity.activity_type - @activity.quantity</li>
-                    }
+                    <div class="count">@activity.quantity</div>
                 }
-            </ul>
+            }
+            <span class="count_bottom"><i class="green">XX% above average</i></span>
+        </div>
+    }
+</div>
+<!-- /top tiles -->
+
+<div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="dashboard_graph">
+            <div class="row x_title">
+                <div class="col-md-6">
+                    <h3>Your Steps <small>By Day</small></h3>
+                </div>
+            </div>
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="chart-container" ">
+                    <canvas id="stepsChart"></canvas>
+                </div>
+            </div>
+            <div class="clearfix"></div>
         </div>
     </div>
-}
+</div>
+<br />
 
-<marquee>Skidaddle skidoodle, your view is now a noodle!</marquee>
+<div class="row align-content-center">
+
+    <div class="col-md-4 col-sm-4 col-xs-12">
+        <div class="x_panel tile fixed_height_320">
+            <div class="x_title">
+                <h2>Register Activity</h2>
+                <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+                <div class="activity-form-message"></div>
+                <form class="ajax-form-activity form-horizontal form-label-left" method="post" action="#">
+                    <div class="field">
+                        <label class="col-md-12 col-sm-12 col-xs-12" for="activity_type">Activity Type:</label>
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <input type="text" name="activity_type" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="col-md-12 col-sm-12 col-xs-12" for="quantity">Quantity:</label>
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <input type="number" name="quantity" min="0" step="1">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="col-md-12 col-sm-12 col-xs-12" for="duration">Duration:</label>
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <input type="time" name="duration">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="col-md-12 col-sm-12 col-xs-12" for="distance">Distance:</label>
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <input type="number" name="distance" min="0" step="10">m
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                            <button class="btn btn-success" type="submit">Send</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-4 col-xs-12">
+        <div class="x_panel tile fixed_height_320">
+            <div class="x_title">
+                <h2>Your Group Challenges</h2>
+                <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+                @foreach (var ch in Model.Challenges )
+                {
+                    <div class="widget_summary">
+                        <div class="w_left w_25">
+                            <span>@ch.goal @ch.activity.goalMetric  @ch.activity.activityName</span>
+                        </div>
+                        <div class="w_center w_55">
+                            <div class="progress">
+                                <div class="progress-bar bg-green" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100" style="width: 90%;">
+                                    <span class="sr-only">90% Complete</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w_right w_20">
+                            <span>90%</span>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-4 col-xs-12">
+    <div class="x_panel tile fixed_height_320">
+        <div class="x_title">
+            <h2>Your Personal Goals</h2>
+            <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+            @foreach (var ch in Model.Challenges)
+            {
+                <div class="widget_summary">
+                    <div class="w_left w_25">
+                        <span>@ch.goal @ch.activity.goalMetric  @ch.activity.activityName</span>
+                    </div>
+                    <div class="w_center w_55">
+                        <div class="progress">
+                            <div class="progress-bar bg-green" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100" style="width: 90%;">
+                                <span class="sr-only">90% Complete</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w_right w_20">
+                        <span>90%</span>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+</div>
+
+    <script>
+    window.onload = function () {
+        $(document).ready(function () {
+            (function () {
+                var ctx = $("#stepsChart");
+                var myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [
+                            @foreach (var day in Model.Activities)
+                            {
+                                var outString = string.Concat('"', day.date, "\",");
+                                @Html.Raw(outString);
+                            }
+                        ],
+                        datasets: [{
+                            label: '# of Steps',
+                            data: [
+                                @foreach (var day in Model.Activities)
+                                {
+                                     @foreach (var activity in day.activity_data)
+                                     {
+                                         @if (activity.activity_type == "Steps")
+                                         {
+                                             var outString = string.Concat(activity.quantity, ',');
+                                             @Html.Raw(outString);
+                                         }
+                                     }
+                                }
+                            ],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.2)',
+                            ],
+                            borderColor: [
+                                'rgba(255,99,132,1)',
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }
+                });
+            })();
+            $('form.ajax-form-activity').submit(function (event) {
+                event.preventDefault();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("InputAjax", "Dashboard")',
+                    data: $('form.ajax-form-activity').first().serialize(),
+                    success: function (data, textStatus, jqXHR) {
+                        $('.activity-form-message').html("<p>Ajax Success</p>");
+                        setTimeout(function () {
+                            $('.activity-form-message').html("");
+                        }, 3000);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        $('.activity-form-message').html("<p>Ajax Failure</p>");
+                        setTimeout(function () {
+                            $('.activity-form-message').html("");
+                        }, 3000);
+                    }
+                });
+            });
+        });
+    };
+    </script>

@@ -23,20 +23,37 @@ namespace health_dashboard.Controllers
 
         public IActionResult Index()
         {
-            string json = System.IO.File.ReadAllText("./exampleData.json");
-            List<object> activity = (List<object>)JsonConvert.DeserializeObject(json, typeof(List<object>));
+            MyViewModel vm = new MyViewModel();
 
-            return View(activity);
+            string activity_json = System.IO.File.ReadAllText("./exampleActivityData.json");
+            List<object> activity = (List<object>)JsonConvert.DeserializeObject(activity_json, typeof(List<object>));
+            vm.Activities = activity;
+
+            string challenge_json = System.IO.File.ReadAllText("./exampleChallengeData.json");
+            List<object> challenge = (List<object>)JsonConvert.DeserializeObject(challenge_json, typeof(List<object>));
+            vm.Challenges = challenge;
+
+            return View(vm);
         }
 
         public IActionResult Input()
         {
             return View();
         }
+
+        [HttpPost]
+        public IActionResult InputAjax()
+        {
+            // Ping off to HDR
+
+            return Ok();
+        }
+
         public IActionResult Rankings()
         {
             return View();
         }
+
         public IActionResult RemoveData()
         {
             return View();
@@ -47,5 +64,12 @@ namespace health_dashboard.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+    }
+
+    // TEMPORARY BODGE (in this class, at least)
+    public class MyViewModel
+    {
+        public List<object> Activities { get; set; }
+        public List<object> Challenges { get; set; }
     }
 }
