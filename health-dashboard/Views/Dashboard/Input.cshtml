@@ -3,6 +3,59 @@
 }
 <h2>@ViewData["Title"]</h2>
 
-<p>This is a default file.</p>
+<div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+            <div class="x_title">
+                <h2>Form Design <small>different form elements</small></h2>
+            </div>
+            <div class="x_content">
+                <br/>
+                <form id="demo-form2" data-parsley-validate class="form-horizontal form-label-left">
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="activity-type">
+                            Activity Type<span class="required">*</span>
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <select id="activity-type" class="form-control col-md-7 col-xs-12" required>
+                                <option value="steps">Steps</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="distance">
+                            Distance (m)
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input type="number" id="distance" name="distance" required="required" class="form-control col-md-7 col-xs-12">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="Duration" class="control-label col-md-3 col-sm-3 col-xs-12">Duration</label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input id="duration" class="form-control col-md-7 col-xs-12" type="text" name="duration">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity" class="control-label col-md-3 col-sm-3 col-xs-12">
+                            Quantity
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input id="quantity" class="date-picker form-control col-md-7 col-xs-12" type="number">
+                        </div>
+                    </div>
+                    <div class="ln_solid"></div>
+                    <div class="form-group">
+                        <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                            <button class="btn btn-primary" type="button">Cancel</button>
+                            <button class="btn btn-primary" type="reset">Reset</button>
+                            <button type="submit" class="btn btn-success">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <marquee>Skidaddle skidoodle, your view is now a noodle!</marquee>
