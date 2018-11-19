@@ -6,19 +6,22 @@
 
 <!-- top tiles -->
 <div class="row tile_count">
-    @foreach (var day in Model.Activities)
+    @foreach (KeyValuePair<string, List<HealthActivity>> day in Model.Activities["Steps"])
     {
-        <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
-            <span class="count_top"><i class="fa fa-map-pin"></i> Steps - @day.date</span>
-            @foreach (var activity in day.activity_data)
-            {
-                @if (activity.activity_type == "Steps")
+    <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+        <span class="count_top"><i class="fa fa-map-pin"></i> Steps - @day.Key</span>
+        <div class="count"> 
+            @{
+                var stepCount = 0;
+                foreach (HealthActivity ha in day.Value)
                 {
-                    <div class="count">@activity.quantity</div>
+                    stepCount += ha.quantity.value;
                 }
+                @Html.Raw(stepCount);
             }
-            <span class="count_bottom"><i class="green">XX% above average</i></span>
         </div>
+        <span class="count_bottom"><i class="green">XX% above average</i></span>
+    </div>
     }
 </div>
 <!-- /top tiles -->
@@ -97,7 +100,7 @@
                 <div class="clearfix"></div>
             </div>
             <div class="x_content">
-                @foreach (var ch in Model.Challenges )
+                @foreach (var ch in Model.Challenges)
                 {
                     <div class="widget_summary">
                         <div class="w_left w_25">
@@ -159,25 +162,26 @@
                     type: 'line',
                     data: {
                         labels: [
-                            @foreach (var day in Model.Activities)
+                            @foreach (KeyValuePair<string, List<HealthActivity>> day in Model.Activities["Steps"])
                             {
-                                var outString = string.Concat('"', day.date, "\",");
+                                var outString = string.Concat('"', day.Key, "\",");
                                 @Html.Raw(outString);
                             }
                         ],
                         datasets: [{
                             label: '# of Steps',
                             data: [
-                                @foreach (var day in Model.Activities)
-                                {
-                                     @foreach (var activity in day.activity_data)
-                                     {
-                                         @if (activity.activity_type == "Steps")
-                                         {
-                                             var outString = string.Concat(activity.quantity, ',');
-                                             @Html.Raw(outString);
-                                         }
-                                     }
+                                @{
+                                    foreach (KeyValuePair<string, List<HealthActivity>> day in Model.Activities["Steps"])
+                                    {
+                                        var stepCount = 0;
+                                        foreach (HealthActivity ha in day.Value)
+                                        {
+                                            stepCount += ha.quantity.value;
+                                        }
+                                        var outString = string.Concat(stepCount, ',');
+                                        @Html.Raw(outString);
+                                    }
                                 }
                             ],
                             backgroundColor: [
