@@ -6,49 +6,42 @@
 <div class="row">
     <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
+            <div class="x_title">
+                <h2>Form Design <small>different form elements</small></h2>
+            </div>
             <div class="x_content">
-                <form class="form-horizontal form-label-left">
+                <br/>
+                <form id="demo-form2" data-parsley-validate class="form-horizontal form-label-left">
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">
-                            First Name <span class="required">*</span>
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="activity-type">
+                            Activity Type<span class="required">*</span>
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="text" id="first-name" required="required" class="form-control col-md-7 col-xs-12">
+                            <select id="activity-type" class="form-control col-md-7 col-xs-12" required>
+                                <option value="steps">Steps</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name">
-                            Last Name <span class="required">*</span>
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="distance">
+                            Distance (m)
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="text" id="last-name" name="last-name" required="required" class="form-control col-md-7 col-xs-12">
+                            <input type="number" id="distance" name="distance" required="required" class="form-control col-md-7 col-xs-12">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="middle-name" class="control-label col-md-3 col-sm-3 col-xs-12">Middle Name / Initial</label>
+                        <label for="Duration" class="control-label col-md-3 col-sm-3 col-xs-12">Duration</label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input id="middle-name" class="form-control col-md-7 col-xs-12" type="text" name="middle-name">
+                            <input id="duration" class="form-control col-md-7 col-xs-12" type="text" name="duration">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">Gender</label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <div id="gender" class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
-                                    <input type="radio" name="gender" value="male"> &nbsp; Male &nbsp;
-                                </label>
-                                <label class="btn btn-primary" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
-                                    <input type="radio" name="gender" value="female"> Female
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">
-                            Date Of Birth <span class="required">*</span>
+                        <label for="quantity" class="control-label col-md-3 col-sm-3 col-xs-12">
+                            Quantity
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input id="birthday" class="date-picker form-control col-md-7 col-xs-12" required="required" type="text">
+                            <input id="quantity" class="date-picker form-control col-md-7 col-xs-12" type="number">
                         </div>
                     </div>
                     <div class="ln_solid"></div>
@@ -59,7 +52,6 @@
                             <button type="submit" class="btn btn-success">Submit</button>
                         </div>
                     </div>
-
                 </form>
              </div>
         </div>
