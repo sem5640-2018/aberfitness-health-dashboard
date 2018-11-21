@@ -1,47 +1,54 @@
-﻿@{
-    ViewData["Title"] = "Input Activity";
-}
-<h2>@ViewData["Title"]</h2>
-
-<div class="row">
+﻿<div class="row">
     <div class="col-md-12 col-sm-12 col-xs-12">
         <div class="x_panel">
             <div class="x_title">
-                <h2>Form Design <small>different form elements</small></h2>
+                <h2>Record Activity</h2>
+                <br/>
+                <div class="clearfix"></div>
             </div>
             <div class="x_content">
+                @if (Model.Message != null)
+                {
+                    <div>
+                        @Model.Message
+                    </div>
+                }
                 <br/>
-                <form id="demo-form2" data-parsley-validate class="form-horizontal form-label-left">
+                <form class="form-horizontal form-label-left" method="post" action="#">
                     <div class="form-group">
                         <label class="control-label col-md-3 col-sm-3 col-xs-12" for="activity-type">
                             Activity Type<span class="required">*</span>
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <select id="activity-type" class="form-control col-md-7 col-xs-12" required>
-                                <option value="steps">Steps</option>
+                            <select id="activity-type" class="form-control col-md-7 col-xs-12" required="required">
+                                <option value=""></option>
+                                @foreach (var at in Model.ActivityTypes)
+                                {
+                                    <option value="@at.name">@at.name</option>
+                                }
                             </select>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="distance">
+                    <div class="form-group form-distance-group">
+                        <label class=" control-label col-md-3 col-sm-3 col-xs-12" for="distance">
                             Distance (m)
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="number" id="distance" name="distance" required="required" class="form-control col-md-7 col-xs-12">
+                            <input type="number" id="distance" name="distance" class="form-control col-md-7 col-xs-12" disabled="disabled">
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group form-duration-group">
                         <label for="Duration" class="control-label col-md-3 col-sm-3 col-xs-12">Duration</label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input id="duration" class="form-control col-md-7 col-xs-12" type="text" name="duration">
+                            <input id="duration" class="form-control col-md-7 col-xs-12" type="text" name="duration" disabled="disabled">
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group form-quantity-group">
                         <label for="quantity" class="control-label col-md-3 col-sm-3 col-xs-12">
                             Quantity
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input id="quantity" class="date-picker form-control col-md-7 col-xs-12" type="number">
+                            <input id="quantity" class="date-picker form-control col-md-7 col-xs-12" type="number" disabled="disabled">
                         </div>
                     </div>
                     <div class="ln_solid"></div>
@@ -57,3 +64,50 @@
         </div>
     </div>
 </div>
+
+<script>
+    window.onload = function () {
+        $(document).ready(function () {
+
+            alert("butts");
+            $('#activity-type').change(function () {
+                var relevant_fields = {
+                    @foreach(var at in Model.ActivityTypes)
+                    {
+                         @Html.Raw("'" + at.name + "': {" +
+                             "'distance': " + (at.uses_distance == "True" ? "true" : "false") + "," +
+                             "'duration': " + (at.uses_duration == "True" ? "true" : "false") + "," +
+                             "'quantity': " + (at.quantity_unit != "" ? "true" : "false") +
+                         "},");
+                    }
+                };
+
+                var selected_type = this.value;
+
+                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['distance'] ) {
+                    $('#distance').removeAttr("disabled");
+                    $('#distance').attr("required", "required");
+                } else {
+                    $('#distance').attr("disabled", "disabled");
+                    $('#distance').removeAttr("required");
+                }
+
+                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['duration'] ) {
+                    $('#duration').removeAttr("disabled");
+                    $('#duration').attr("required", "required");
+                } else {
+                    $('#duration').attr("disabled", "disabled");
+                    $('#duration').removeAttr("required");
+                }
+
+                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['quantity'] ) {
+                    $('#quantity').removeAttr("disabled");
+                    $('#quantity').attr("required", "required");
+                } else {
+                    $('#quantity').attr("disabled", "disabled");
+                    $('#quantity').removeAttr("required");
+                }
+            });
+        });
+    };
+</script>

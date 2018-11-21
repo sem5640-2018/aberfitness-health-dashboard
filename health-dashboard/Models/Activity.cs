@@ -7,12 +7,14 @@
         public string distance { get; set; } // Metres
         public string duration { get; set; } // Seconds
         public HealthActivityQuantity quantity { get; set; }
-
     }
 
     public class HealthActivityQuantity
     {
         public int value { get; set; }
         public string unit { get; set; }
+
     }
+
 }
+

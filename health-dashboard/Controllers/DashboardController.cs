@@ -23,7 +23,7 @@ namespace health_dashboard.Controllers
 
         public IActionResult Index()
         {
-            MyViewModel vm = new MyViewModel();
+            IndexViewModel vm = new IndexViewModel();
 
             string api_activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
             List<HealthActivity> api_activities = (List<HealthActivity>)JsonConvert.DeserializeObject(api_activities_json, typeof(List<HealthActivity>));
@@ -57,16 +57,28 @@ namespace health_dashboard.Controllers
             }
             vm.Activities = activities_by_type;
 
-            string challenge_json = System.IO.File.ReadAllText("./exampleChallengeData.json");
-            List<object> challenge = (List<object>)JsonConvert.DeserializeObject(challenge_json, typeof(List<object>));
-            vm.Challenges = challenge;
+            string challenges_json = System.IO.File.ReadAllText("./challenge-find-1.json");
+            List<object> challenges = (List<object>)JsonConvert.DeserializeObject(challenges_json, typeof(List<object>));
+            vm.Challenges = challenges;
 
             return View(vm);
         }
 
         public IActionResult Input()
         {
-            return View();
+            InputViewModel vm = new InputViewModel();
+
+            string activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+            List<object> activity_types = (List<object>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<object>));
+            vm.ActivityTypes = activity_types;
+
+            if (Request.Method == "POST")
+            {
+                vm.Message = "You did a thing!";
+                return View(vm);
+            }
+            
+            return View(vm);
         }
 
         [HttpPost]
@@ -95,9 +107,15 @@ namespace health_dashboard.Controllers
     }
 
     // TEMPORARY BODGE (in this class, at least)
-    public class MyViewModel
+    public class IndexViewModel
     {
         public Dictionary<string, Dictionary<string, List<HealthActivity>>> Activities { get; set; }
         public List<object> Challenges { get; set; }
+    }
+
+    public class InputViewModel
+    {
+        public List<object> ActivityTypes { get; set; }
+        public string Message { get; set; }
     }
 }
