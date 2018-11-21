@@ -1,10 +1,40 @@
-language: csharp
-solution: health-dashboard.sln
-mono: none
-dotnet: 2.1
+env:
+  global:
+   - secure: EPvrg7Myw5QH+RttY78Mc5XBDx5pVbgX9QZxU2o2luSL9TrbGQcfyt1wPst/Ya3l+396uJxOcihOPCdNf0FhCqpsltJU31DNyP8aqZWO3K/8CodpXL4GC3h2Is3/1lE4L5dz0EeYmAiaRv5Wk16pETP9JzYovoF5Gh8+oEaT8lhDMG+PubJHutiFOqqJFy6o6cbJYLupxYU8JwLW0XMooOYExyR9/ANce4obUNZ6Dcfd4rnAA+M3lNaRDVq5dv8BBH+ZmnocXF6i5A8ThIF7A2g+bBv2AgFDZht6t8YSEmAdE3hECQpIc9Uryl/507YGpUDHBomd4xKWN0+74N+sSKs5X5Eb0Pu9h3vakFxVKCGv86/wb1cXQUHrTKBMkUF7ZrahfZFRF+qC7Zd5GRaG5PKuMxihEw4Kvy3H2qEe1ng3LGZfC5yvpRc6Mtofq4qlh/yL/hfDGApoNa3tV3jhLGl8Iw9LKvJxe0cmGS/trX3YaATtCW3tNjNJsZVPxFwQh+6g56+s40k
+   - secure: ElgybtJC4oslIQ9xTBtZA8TfJgGSmazl/ys/7fAv8TrNO4/uNL3SSHYNeRAOj9bWYlH4otMKHYtPWi0NgHMLtKRF+PiDJ0CawZCUvkhnjGOTzk8AQ/tJAgmARtaiKyRMv2WBoyfYTC2oSwvYGMdRrRSWgEJbl3WBRECVJvLvrQGleFZt9rFRFssIAstRlNDiqFJiiletIGB9jSO8mZDh32eJS4jbpqiFnWpQPjFErViguIHWPEfRS97isD5dB+jO3IflpFyuiMmXJh1Obmfozfy+tOGSovg0JW2zf4RUM3F4E+JtQqIHNHYD0iYu/g0O20uFSC2qS+b5jYssftz9hclXX65MpcBuloAZB3ORsqOroQ30ihxpaN/zZ/gvTBMsqTBdPaAUzC0BRZpyNAj4xgBHyFDMSEvcuNu5PlxRTpw00Sf+Wn/WGDxZdcnKJoKRqNc5aGm9jxIu8XbT75k+CwFELMggAas2cn5b5jsXfZZAPeyYN4hbJPQNF38xyqcE9AY6ZNbSqkx
 
-script:
-- dotnet restore
+
+stages:
+  - test
+  - name: build_staging
+    if: branch = development AND type = push
+  - name: build_release
+    if: branch = master AND type = push
+
+jobs:
+  include:
+    - stage: test
+      name: "xUnit Tests"
+      language: csharp
+      solution: health-dashboard.sln
+      mono: none
+      dotnet: 2.1
+      script:
+        - dotnet restore
+    - stage: build_staging
+      name: "Build docker staging image"
+      sudo: required
+      services:
+        - docker
+      script:
+        - ./bin/docker.sh staging
+    - stage: build_release
+      name: "Build docker release image"
+      sudo: required
+      services:
+        - docker
+      script:
+        - ./bin/docker.sh latest
 
 notifications:
     slack: sem5640-2018:QpZDGa0p8DOsuIzZBZn1jK0C
