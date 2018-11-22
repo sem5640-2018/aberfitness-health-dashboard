@@ -25,10 +25,29 @@ namespace health_dashboard.Controllers
         {
             IndexViewModel vm = new IndexViewModel();
 
-            string api_activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
+            string api_activities_json;
+            //if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if (false)
+            {
+                // api_activities_json = HTTP GET health-data-repositry/activity/find/{UUID}
+            }
+            else
+            {
+                api_activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
+            }
             List<HealthActivity> api_activities = (List<HealthActivity>)JsonConvert.DeserializeObject(api_activities_json, typeof(List<HealthActivity>));
 
-            string activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+
+            string activity_types_json;
+            //if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if (false)
+            {
+                // activity_types_json = HTTP GET health-data-repositry/activity-types
+            }
+            else
+            {
+                activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+            }
             List<object> activity_types = (List<object>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<object>));
             vm.ActivityTypes = activity_types;
 
@@ -61,7 +80,16 @@ namespace health_dashboard.Controllers
             }
             vm.Activities = activities_by_type;
 
-            string challenges_json = System.IO.File.ReadAllText("./challenge-find-1.json");
+            string challenges_json;
+            //if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if (false)
+            {
+                // challenges_json = HTTP GET challenges/find/{UUID}
+            }
+            else
+            {
+                challenges_json = System.IO.File.ReadAllText("./challenge-find-1.json");
+            }
             List<object> challenges = (List<object>)JsonConvert.DeserializeObject(challenges_json, typeof(List<object>));
             vm.Challenges = challenges;
 
@@ -72,10 +100,20 @@ namespace health_dashboard.Controllers
         {
             InputViewModel vm = new InputViewModel();
 
-            string activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+            string activity_types_json;
+
+            //if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if ( false )
+            {
+                // activity_types_json = HTTP GET health-data-repositry/activity-types
+            }
+            else
+            {
+                activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+            }
             List<object> activity_types = (List<object>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<object>));
             vm.ActivityTypes = activity_types;
-
+            
             if (Request.Method == "POST")
             {
                 // Ping off to HDR
