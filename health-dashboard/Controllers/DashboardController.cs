@@ -28,6 +28,10 @@ namespace health_dashboard.Controllers
             string api_activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
             List<HealthActivity> api_activities = (List<HealthActivity>)JsonConvert.DeserializeObject(api_activities_json, typeof(List<HealthActivity>));
 
+            string activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+            List<object> activity_types = (List<object>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<object>));
+            vm.ActivityTypes = activity_types;
+
             Dictionary<string, Dictionary<string, List<HealthActivity>>> activities_by_type = new Dictionary<string, Dictionary<string, List<HealthActivity>>>();
             /*
              *  activities_by_type = [
@@ -74,8 +78,9 @@ namespace health_dashboard.Controllers
 
             if (Request.Method == "POST")
             {
-                vm.Message = "You did a thing!";
-                return View(vm);
+                // Ping off to HDR
+                // Add success / failure message
+                //vm.Message = "";
             }
             
             return View(vm);
@@ -110,6 +115,7 @@ namespace health_dashboard.Controllers
     public class IndexViewModel
     {
         public Dictionary<string, Dictionary<string, List<HealthActivity>>> Activities { get; set; }
+        public List<object> ActivityTypes { get; set; }
         public List<object> Challenges { get; set; }
     }
 
