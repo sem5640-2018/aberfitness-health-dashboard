@@ -51,9 +51,12 @@
                 <div class="activity-form-message"></div>
                 <form class="ajax-form-activity form-horizontal form-label-left" method="post" action="#">
                     <div class="field">
+                        <input type="hidden" id="start-time" name="start-time" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
+                    </div>
+                    <div class="field">
                         <label class="col-md-12 col-sm-12 col-xs-12" for="activity_type">Activity Type:</label>
                         <div class="col-md-12 col-sm-12 col-xs-12">
-                            <select id="activity-type" class="form-control col-md-7 col-xs-12" required="required">
+                            <select id="activity-type" name ="activity-type" class="form-control col-md-7 col-xs-12" required="required">
                                 <option value=""></option>
                                 @foreach (var at in Model.ActivityTypes)
                                 {
@@ -64,7 +67,7 @@
                     </div>
 
                     <div class="field">
-                        <label class="col-md-12 col-sm-12 col-xs-12" for="distance">Distance:</label>
+                        <label class="col-md-12 col-sm-12 col-xs-12" for="distance">Distance (m):</label>
                         <div class="col-md-12 col-sm-12 col-xs-12">
                             <input type="number" id="distance" name="distance" min="0" step="10" disabled="disabled">
                         </div>
@@ -84,7 +87,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <div class="col-md-12 col-sm-12 col-xs-12 col-md-offset-4">
+                        <div class="col-md-12 col-sm-12 col-xs-12 col-md-offset-9">
                             <button class="btn btn-success" type="submit">Send</button>
                         </div>
                     </div>

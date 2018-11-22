@@ -6,11 +6,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using health_dashboard.Models;
 using Newtonsoft.Json;
+using System.Net.Http;
+using Microsoft.AspNetCore.Http;
+using System.Net;
 
 namespace health_dashboard.Controllers
 {
     public class DashboardController : Controller
     {
+        private static readonly HttpClient client = new HttpClient();
+
         public IActionResult Admin()
         {
             return View();
@@ -29,7 +34,7 @@ namespace health_dashboard.Controllers
             //if ( Environment.GetEnvironmentVariable("deployment") != null )
             if (false)
             {
-                // api_activities_json = HTTP GET health-data-repositry/activity/find/{UUID}
+                //api_activities_json = await client.GetStringAsync(health-data-repositry/activity/find/{UUID});
             }
             else
             {
@@ -42,7 +47,7 @@ namespace health_dashboard.Controllers
             //if ( Environment.GetEnvironmentVariable("deployment") != null )
             if (false)
             {
-                // activity_types_json = HTTP GET health-data-repositry/activity-types
+                //activity_types_json = await client.GetStringAsync(health-data-repositry/activity-types);
             }
             else
             {
@@ -84,7 +89,7 @@ namespace health_dashboard.Controllers
             //if ( Environment.GetEnvironmentVariable("deployment") != null )
             if (false)
             {
-                // challenges_json = HTTP GET challenges/find/{UUID}
+                //challenges_json = await client.GetStringAsync(challenges/find/{UUID});
             }
             else
             {
@@ -96,16 +101,15 @@ namespace health_dashboard.Controllers
             return View(vm);
         }
 
-        public IActionResult Input()
+        public async Task<IActionResult> Input()
         {
             InputViewModel vm = new InputViewModel();
 
             string activity_types_json;
-
             //if ( Environment.GetEnvironmentVariable("deployment") != null )
             if ( false )
             {
-                // activity_types_json = HTTP GET health-data-repositry/activity-types
+                //activity_types_json = await client.GetStringAsync(health-data-repositry/activity-types);
             }
             else
             {
@@ -116,18 +120,53 @@ namespace health_dashboard.Controllers
             
             if (Request.Method == "POST")
             {
-                // Ping off to HDR
+                var values = new Dictionary<string, string>
+                {
+                   { "start_time", Request.Form["start-time"] },
+                   { "activity_type", Request.Form["activity-type"] },
+                   { "distance", Request.Form["distance"] },
+                   { "duration", Request.Form["duration"] },
+                   { "quantity", Request.Form["quantity"] }
+                };
+
+                var content = new FormUrlEncodedContent(values);
+                /*var response = await client.PostAsync(health-data-repositry/activity, content);
+                
                 // Add success / failure message
-                //vm.Message = "";
+                if ((int) response.StatusCode == 201)
+                {
+                */
+                    vm.Message = "Success";
+                /*
+                } else
+                {
+                    vm.Message = "Activity save failed. Please contact a coordinator or an administrator.";
+                }
+                */
             }
             
             return View(vm);
         }
 
         [HttpPost]
-        public IActionResult InputAjax()
+        public async Task<IActionResult> InputAjax()
         {
-            // Ping off to HDR
+            var values = new Dictionary<string, string>
+            {
+               { "start_time", Request.Form["start-time"] },
+               { "activity_type", Request.Form["activity-type"] },
+               { "distance", Request.Form["distance"] },
+               { "duration", Request.Form["duration"] },
+               { "quantity", Request.Form["quantity"] }
+            };
+
+            var content = new FormUrlEncodedContent(values);
+            /*var response = await client.PostAsync(health-data-repositry/activity, content);
+
+            if ((int)response.StatusCode != 201)
+            {
+                return BadRequest();
+            }*/
 
             return Ok();
         }

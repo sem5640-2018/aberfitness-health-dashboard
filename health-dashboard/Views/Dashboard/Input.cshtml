@@ -16,11 +16,19 @@
                 <br/>
                 <form class="form-horizontal form-label-left" method="post" action="#">
                     <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="start-time">
+                            Time of Activity
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input type="datetime-local" id="start-time" name="start-time" class="form-control col-md-7 col-xs-12" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" max="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="control-label col-md-3 col-sm-3 col-xs-12" for="activity-type">
                             Activity Type<span class="required">*</span>
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <select id="activity-type" class="form-control col-md-7 col-xs-12" required="required">
+                            <select id="activity-type" name="activity-type" class="form-control col-md-7 col-xs-12" required="required">
                                 <option value=""></option>
                                 @foreach (var at in Model.ActivityTypes)
                                 {
@@ -30,7 +38,7 @@
                         </div>
                     </div>
                     <div class="form-group form-distance-group">
-                        <label class=" control-label col-md-3 col-sm-3 col-xs-12" for="distance">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="distance">
                             Distance (m)
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
