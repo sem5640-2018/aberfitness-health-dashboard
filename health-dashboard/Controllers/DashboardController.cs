@@ -6,11 +6,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using health_dashboard.Models;
 using Newtonsoft.Json;
+using System.Net.Http;
+using Microsoft.AspNetCore.Http;
+using System.Net;
 
 namespace health_dashboard.Controllers
 {
     public class DashboardController : Controller
     {
+        private static readonly HttpClient client = new HttpClient();
+
         public IActionResult Admin()
         {
             return View();
@@ -23,10 +28,33 @@ namespace health_dashboard.Controllers
 
         public IActionResult Index()
         {
-            MyViewModel vm = new MyViewModel();
+            IndexViewModel vm = new IndexViewModel();
 
-            string api_activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
+            string api_activities_json;
+            //if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if (false)
+            {
+                //api_activities_json = await client.GetStringAsync(health-data-repositry/activity/find/{UUID});
+            }
+            else
+            {
+                api_activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
+            }
             List<HealthActivity> api_activities = (List<HealthActivity>)JsonConvert.DeserializeObject(api_activities_json, typeof(List<HealthActivity>));
+
+
+            string activity_types_json;
+            //if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if (false)
+            {
+                //activity_types_json = await client.GetStringAsync(health-data-repositry/activity-types);
+            }
+            else
+            {
+                activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+            }
+            List<object> activity_types = (List<object>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<object>));
+            vm.ActivityTypes = activity_types;
 
             Dictionary<string, Dictionary<string, List<HealthActivity>>> activities_by_type = new Dictionary<string, Dictionary<string, List<HealthActivity>>>();
             /*
@@ -57,22 +85,88 @@ namespace health_dashboard.Controllers
             }
             vm.Activities = activities_by_type;
 
-            string challenge_json = System.IO.File.ReadAllText("./exampleChallengeData.json");
-            List<object> challenge = (List<object>)JsonConvert.DeserializeObject(challenge_json, typeof(List<object>));
-            vm.Challenges = challenge;
+            string challenges_json;
+            //if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if (false)
+            {
+                //challenges_json = await client.GetStringAsync(challenges/find/{UUID});
+            }
+            else
+            {
+                challenges_json = System.IO.File.ReadAllText("./challenge-find-1.json");
+            }
+            List<object> challenges = (List<object>)JsonConvert.DeserializeObject(challenges_json, typeof(List<object>));
+            vm.Challenges = challenges;
 
             return View(vm);
         }
 
-        public IActionResult Input()
+        public async Task<IActionResult> Input()
         {
-            return View();
+            InputViewModel vm = new InputViewModel();
+
+            string activity_types_json;
+            //if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if ( false )
+            {
+                //activity_types_json = await client.GetStringAsync(health-data-repositry/activity-types);
+            }
+            else
+            {
+                activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+            }
+            List<object> activity_types = (List<object>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<object>));
+            vm.ActivityTypes = activity_types;
+            
+            if (Request.Method == "POST")
+            {
+                var values = new Dictionary<string, string>
+                {
+                   { "start_time", Request.Form["start-time"] },
+                   { "activity_type", Request.Form["activity-type"] },
+                   { "distance", Request.Form["distance"] },
+                   { "duration", Request.Form["duration"] },
+                   { "quantity", Request.Form["quantity"] }
+                };
+
+                var content = new FormUrlEncodedContent(values);
+                /*var response = await client.PostAsync(health-data-repositry/activity, content);
+                
+                // Add success / failure message
+                if ((int) response.StatusCode == 201)
+                {
+                */
+                    vm.Message = "Success";
+                /*
+                } else
+                {
+                    vm.Message = "Activity save failed. Please contact a coordinator or an administrator.";
+                }
+                */
+            }
+            
+            return View(vm);
         }
 
         [HttpPost]
-        public IActionResult InputAjax()
+        public async Task<IActionResult> InputAjax()
         {
-            // Ping off to HDR
+            var values = new Dictionary<string, string>
+            {
+               { "start_time", Request.Form["start-time"] },
+               { "activity_type", Request.Form["activity-type"] },
+               { "distance", Request.Form["distance"] },
+               { "duration", Request.Form["duration"] },
+               { "quantity", Request.Form["quantity"] }
+            };
+
+            var content = new FormUrlEncodedContent(values);
+            /*var response = await client.PostAsync(health-data-repositry/activity, content);
+
+            if ((int)response.StatusCode != 201)
+            {
+                return BadRequest();
+            }*/
 
             return Ok();
         }
@@ -95,9 +189,16 @@ namespace health_dashboard.Controllers
     }
 
     // TEMPORARY BODGE (in this class, at least)
-    public class MyViewModel
+    public class IndexViewModel
     {
         public Dictionary<string, Dictionary<string, List<HealthActivity>>> Activities { get; set; }
+        public List<object> ActivityTypes { get; set; }
         public List<object> Challenges { get; set; }
+    }
+
+    public class InputViewModel
+    {
+        public List<object> ActivityTypes { get; set; }
+        public string Message { get; set; }
     }
 }

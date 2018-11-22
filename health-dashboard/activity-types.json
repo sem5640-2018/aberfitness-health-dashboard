@@ -1,0 +1,22 @@
+[
+  {
+    "activity_id": 0,
+    "name": "Swimming",
+    "quantity_unit": "",
+    "uses_duration": false,
+    "uses_distance": true,
+    "fitbit_activity_ids": [
+      "1112"
+    ]
+  },
+  {
+    "activity_id": 1,
+    "name": "Steps",
+    "quantity_unit": "Steps",
+    "uses_duration": false,
+    "uses_distance": false,
+    "fitbit_activity_ids": [
+      "1111"
+    ]
+  }
+]
