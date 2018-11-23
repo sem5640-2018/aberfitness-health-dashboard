@@ -1,8 +1,159 @@
-﻿@{
-    ViewData["Title"] = "Goals";
-}
-<h2>@ViewData["Title"]</h2>
+﻿@using System.Globalization;
 
-<p>This is a default file.</p>
+<div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel tile">
+            <div class="x_title">
+                <h2>Add a Personal Goal</h2>
+                <br />
+                <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+                @if (Model.Message != null)
+                {
+                    <div>
+                        @Model.Message
+                    </div>
+                }
+                <form class="form-horizontal form-label-left" method="post" action="#">
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="activity-type">
+                            Activity Type<span class="required">*</span>
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <select id="activity-type" name="activity-type" class="form-control col-md-7 col-xs-12" required="required">
+                                <option value=""></option>
+                                @foreach (var at in Model.ActivityTypes)
+                                {
+                                    <option value="@at.name">@at.name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="target">
+                            Target
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input type="number" id="target" name="target" class="form-control col-md-7 col-xs-12" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12">Goal Metric</label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <div id="" class="btn-group" data-toggle="buttons">
+                                <label id="distance" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" disabled="disabled">
+                                    <input type="radio" name="goal-metric" value="distance"> Distance (metres)
+                                </label>
+                                <label id="duration" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" disabled="disabled">
+                                    <input type="radio" name="goal-metric" value="duration"> Duration (minutes)
+                                </label>
+                                <label id="quantity" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" disabled="disabled">
+                                    <input type="radio" name="goal-metric" value="quantity"> Quantity
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="start-time">
+                            Start Time
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input type="datetime-local" id="start-time" name="start-time" class="form-control col-md-7 col-xs-12" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="end-time">
+                            End Time
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input type="datetime-local" id="end-time" name="end-time" class="form-control col-md-7 col-xs-12" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
+                        </div>
+                    </div>
+                    <div class="ln_solid"></div>
+                    <div class="form-group">
+                        <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-5">
+                            <button type="submit" class="btn btn-success">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel tile">
+            <div class="x_title">
+                <h2>Your Goals</h2>
+                <br />
+                <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+                <table id="datatable" class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Activity Type</th>
+                            <th>Amount Completed</th>
+                            <th>Required</th>
+                            <th>Time Period</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ch in Model.Challenges)
+                        {
+                            <tr>
+                                <th>@ch.activity.activityName</th>
+                                <th>@(Math.Floor((double)((int)ch.goal * (int)ch.percentComplete / 100))) @ch.activity.goalMetric</th>
+                                <th>@ch.goal @ch.activity.goalMetric</th>
+                                <th>@(DateTime.Parse((string)ch.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)ch.endDateTime, CultureInfo.InvariantCulture).ToString())</th>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
-<marquee>Skidaddle skidoodle, your view is now a noodle!</marquee>
+<script>
+    window.onload = function () {
+        $(document).ready(function () {
+            $('#activity-type').change(function () {
+                var relevant_fields = {
+                        @foreach(var at in Model.ActivityTypes)
+                        {
+                             @Html.Raw("'" + at.name + "': {" +
+                                 "'distance': " + (at.uses_distance == "True" ? "true" : "false") + "," +
+                                 "'duration': " + (at.uses_duration == "True" ? "true" : "false") + "," +
+                                 "'quantity': " + (at.quantity_unit != "" ? "true" : "false") +
+                             "},");
+                        }
+                };
+
+                var selected_type = this.value;
+
+                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['distance']) {
+                    $('#distance').removeAttr("disabled");
+                } else {
+                    $('#distance').attr("disabled", "disabled");
+                    $('#distance').removeClass("active");
+                }
+
+                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['duration']) {
+                    $('#duration').removeAttr("disabled");
+                } else {
+                    $('#duration').attr("disabled", "disabled");
+                    $('#duration').removeClass("active");
+                }
+
+                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['quantity']) {
+                    $('#quantity').removeAttr("disabled");
+                } else {
+                    $('#quantity').attr("disabled", "disabled");
+                    $('#quantity').removeClass("active");
+                }
+            });
+        });
+    };
+</script>
