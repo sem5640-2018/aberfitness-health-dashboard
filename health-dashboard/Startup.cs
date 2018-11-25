@@ -57,7 +57,13 @@ namespace health_dashboard
                 options.ClaimActions.MapJsonKey("locale", "locale");
                 options.ClaimActions.MapJsonKey("user_type", "user_type");
             });
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Administrator", pb => pb.RequireClaim("user_type", "administrator"));
 
+                // Coordinator policy allows both Coordinators and Administrators
+                options.AddPolicy("Coordinator", pb => pb.RequireClaim("user_type", new[] { "administrator", "coordinator" }));
+            });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 

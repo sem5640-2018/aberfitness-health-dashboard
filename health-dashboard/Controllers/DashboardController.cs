@@ -20,6 +20,7 @@ namespace health_dashboard.Controllers
     {
         private static readonly HttpClient client = new HttpClient();
         
+        [Authorize("Administrator")]
         public IActionResult Admin()
         {
             return View();

@@ -24,7 +24,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "Health_Dashboard__ClientSecret": "GokuFan420"
       },
-      "applicationUrl": "https://localhost:53346/"
+      "applicationUrl": "http://localhost:53346/"
     }
   }
 }
