@@ -15,10 +15,12 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace health_dashboard.Controllers
 {
+    [Authorize]
     public class DashboardController : Controller
     {
         private static readonly HttpClient client = new HttpClient();
         
+        [Authorize("Administrator")]
         public IActionResult Admin()
         {
             return View();
