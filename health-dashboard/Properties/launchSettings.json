@@ -19,13 +19,12 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
-        "health-dashboard__ClientSecret": "GokuFan420",
-        "health-dashboard__ClientId": "health_dashboard",
-        "health-dashboard__GatekeeperUrl": "https://docker2.aberfitness.biz/gatekeeper/",
+        "Health_Dashboard__GatekeeperUrl": "https://docker2.aberfitness.biz/gatekeeper/",
+        "Health_Dashboard__ClientId": "health_dashboard",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "health-dashboard__PathBase": ""
+        "Health_Dashboard__ClientSecret": "GokuFan420"
       },
-      "applicationUrl": "http://localhost:53346/"
+      "applicationUrl": "https://localhost:53346/"
     }
   }
 }
