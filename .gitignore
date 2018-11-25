@@ -327,5 +327,5 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder
 .mfractor/
 
-# wwwroot static directory
-**/wwwroot/
+# wwwroot static directory - commented out so they are committed and tracked
+#**/wwwroot/
