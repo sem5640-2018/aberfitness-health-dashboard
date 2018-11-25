@@ -10,6 +10,7 @@ using System.Net.Http;
 using Microsoft.AspNetCore.Http;
 using System.Net;
 using Microsoft.Extensions.Primitives;
+using System.Text;
 
 namespace health_dashboard.Controllers
 {
@@ -191,19 +192,19 @@ namespace health_dashboard.Controllers
 
         private async Task<HttpResponseMessage> PostFormActivity()
         {
-            var values = new Dictionary<string, string>
+            var activity = new NewHealthActivity
             {
-                { "start_time", Request.Form["start-time"] },
-                { "activity_type", Request.Form["activity-type"] },
-                { "distance", Request.Form["distance"] },
-                { "duration", Request.Form["duration"] },
-                { "quantity", Request.Form["quantity"] }
+                start_time = Request.Form["start-time"],
+                activity_type = Request.Form["activity-type"],
+                distance = Request.Form["distance"],
+                duration = Request.Form["duration"],
+                quantity = int.Parse(Request.Form["quantity"])
             };
+            var activity_json = JsonConvert.SerializeObject(activity);
 
-            var content = new FormUrlEncodedContent(values);
             if (Environment.GetEnvironmentVariable("deployment") != null)
             {
-                return await client.PostAsync("health-data-repositry/activity", content);
+                return await client.PostAsync("health-data-repositry/activity", new StringContent(activity_json, Encoding.UTF8, "application/json");
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -213,6 +214,7 @@ namespace health_dashboard.Controllers
             return r;
         }
 
+        /* Needs changing to JSON */
         private async Task<HttpResponseMessage> PostFormChallenge()
         {
             var values = new Dictionary<string, string>
