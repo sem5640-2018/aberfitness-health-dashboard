@@ -11,18 +11,19 @@ using Microsoft.AspNetCore.Http;
 using System.Net;
 using Microsoft.Extensions.Primitives;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace health_dashboard.Controllers
 {
     public class DashboardController : Controller
     {
         private static readonly HttpClient client = new HttpClient();
-
+        
         public IActionResult Admin()
         {
             return View();
         }
-
+        
         public async Task<IActionResult> Goals()
         {
             GoalsViewModel vm = new GoalsViewModel();
@@ -31,7 +32,7 @@ namespace health_dashboard.Controllers
 
             if (Request.Method == "POST")
             {
-                if ( StringValues.IsNullOrEmpty(Request.Form["goal-metric"]) )
+                if (StringValues.IsNullOrEmpty(Request.Form["goal-metric"]))
                 {
                     vm.Message = "Please choose a goal metric.";
                     return View(vm);
@@ -52,7 +53,19 @@ namespace health_dashboard.Controllers
 
             return View(vm);
         }
+        
+        [HttpPost]
+        public async Task<IActionResult> GoalDeleteAjax(int id)
+        {
+            var response = await DeleteGoal(id);
 
+            if ((int)response.StatusCode != 201)
+            {
+                return BadRequest();
+            }
+            return Ok();
+        }
+        
         public async Task<IActionResult> Index()
         {
             IndexViewModel vm = new IndexViewModel();
@@ -95,7 +108,7 @@ namespace health_dashboard.Controllers
 
             return View(vm);
         }
-
+        
         public async Task<IActionResult> Input()
         {
             InputViewModel vm = new InputViewModel();
@@ -118,7 +131,7 @@ namespace health_dashboard.Controllers
             
             return View(vm);
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> InputAjax()
         {
@@ -130,17 +143,17 @@ namespace health_dashboard.Controllers
             }
             return Ok();
         }
-
+        
         public IActionResult Rankings()
         {
             return View();
         }
-
+        
         public IActionResult RemoveData()
         {
             return View();
         }
-
+        
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
@@ -148,6 +161,20 @@ namespace health_dashboard.Controllers
         }
 
         /* ------ API Calls and Responses ------ */
+        private async Task<HttpResponseMessage> DeleteGoal(int id)
+        {
+            if (Environment.GetEnvironmentVariable("deployment") != null)
+            {
+                return await client.DeleteAsync("challenges/" + id);
+            }
+
+            HttpResponseMessage r = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.Moved
+            };
+            return r;
+        }
+
         private async Task<List<HealthActivity>> GetActivities()
         {
             string api_activities_json;
@@ -175,11 +202,11 @@ namespace health_dashboard.Controllers
             }
             return (List<object>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<object>));
         }
-
-        private async Task<List<object>> GetChallenges()
+        
+        private async Task<List<Challenge>> GetChallenges()
         {
             string challenges_json;
-            if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if (Environment.GetEnvironmentVariable("deployment") != null)
             {
                 challenges_json = await client.GetStringAsync("challenges/find/{UUID}");
             }
@@ -187,7 +214,7 @@ namespace health_dashboard.Controllers
             {
                 challenges_json = System.IO.File.ReadAllText("./challenge-find-1.json");
             }
-            return (List<object>)JsonConvert.DeserializeObject(challenges_json, typeof(List<object>));
+            return (List<Challenge>)JsonConvert.DeserializeObject(challenges_json, typeof(List<Challenge>));
         }
 
         private async Task<HttpResponseMessage> PostFormActivity()
@@ -204,7 +231,7 @@ namespace health_dashboard.Controllers
 
             if (Environment.GetEnvironmentVariable("deployment") != null)
             {
-                return await client.PostAsync("health-data-repositry/activity", new StringContent(activity_json, Encoding.UTF8, "application/json");
+                return await client.PostAsync("health-data-repositry/activity", new StringContent(activity_json, Encoding.UTF8, "application/json"));
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -254,7 +281,7 @@ namespace health_dashboard.Controllers
     public class GoalsViewModel
     {
         public List<object> ActivityTypes { get; set; }
-        public List<object> Challenges { get; set; }
+        public List<Challenge> Challenges { get; set; }
         public string Message { get; set; }
     }
 
@@ -262,7 +289,7 @@ namespace health_dashboard.Controllers
     {
         public Dictionary<string, Dictionary<string, List<HealthActivity>>> Activities { get; set; }
         public List<object> ActivityTypes { get; set; }
-        public List<object> Challenges { get; set; }
+        public List<Challenge> Challenges { get; set; }
     }
 
     public class InputViewModel

@@ -97,6 +97,7 @@
                             <th>Amount Completed</th>
                             <th>Required</th>
                             <th>Time Period</th>
+                            <th>Delete Goal</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -107,6 +108,7 @@
                                 <th>@(Math.Floor((double)((int)ch.goal * (int)ch.percentComplete / 100))) @ch.activity.goalMetric</th>
                                 <th>@ch.goal @ch.activity.goalMetric</th>
                                 <th>@(DateTime.Parse((string)ch.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)ch.endDateTime, CultureInfo.InvariantCulture).ToString())</th>
+                                <td><a href="#" class="goal-delete-ajax" data-id="@ch.challengeId">Delete</a></td>
                             </tr>
                         }
                     </tbody>
@@ -153,6 +155,25 @@
                     $('#quantity').attr("disabled", "disabled");
                     $('#quantity').removeClass("active");
                 }
+            });
+
+            $('.goal-delete-ajax').click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("GoalDeleteAjax", "Dashboard")' + '/' + $(this).data("id"),
+                    success: function (data, textStatus, jqXHR) {
+                        $('.goal-delete-message[data-id=' + $(this).data("id") + ']').html("<p>Goal deleted successfully.</p>");
+                        setTimeout(function () {
+                            $('.goal-delete-message[data-id=' + $(this).data("id") + ']').html("");
+                        }, 3000);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        $('.goal-delete-message[data-id=' + $(this).data("id") + ']').html("<p>Deletion failed</p>");
+                        setTimeout(function () {
+                            $('.goal-delete-message[data-id=' + $(this).data("id") + ']').html("");
+                        }, 3000);
+                    }
+                });
             });
         });
     };
