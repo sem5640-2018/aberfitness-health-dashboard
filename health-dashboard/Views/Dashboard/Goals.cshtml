@@ -25,7 +25,7 @@
                                 <option value=""></option>
                                 @foreach (var at in Model.ActivityTypes)
                                 {
-                                    <option value="@at.name">@at.name</option>
+                                    <option value="@at.Id">@at.Name</option>
                                 }
                             </select>
                         </div>
@@ -42,14 +42,23 @@
                         <label class="control-label col-md-3 col-sm-3 col-xs-12">Goal Metric</label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
                             <div id="" class="btn-group" data-toggle="buttons">
-                                <label id="distance" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" disabled="disabled">
-                                    <input type="radio" name="goal-metric" value="distance"> Distance (metres)
+                                <label id="time-seconds" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                    <input type="radio" name="goal-metric" value="Seconds"> Time (Seconds)
                                 </label>
-                                <label id="duration" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" disabled="disabled">
-                                    <input type="radio" name="goal-metric" value="duration"> Duration (minutes)
+                                <label id="time-minutes" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                    <input type="radio" name="goal-metric" value="Minutes"> Time (Minutes)
                                 </label>
-                                <label id="quantity" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default" disabled="disabled">
-                                    <input type="radio" name="goal-metric" value="quantity"> Quantity
+                                <label id="calories-burnt" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                    <input type="radio" name="goal-metric" value="Calories"> Calories Burnt
+                                </label>
+                                <label id="steps" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                    <input type="radio" name="goal-metric" value="Steps"> Steps
+                                </label>
+                                <label id="metres-travelled" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                    <input type="radio" name="goal-metric" value="Metres"> Metres Travelled
+                                </label>
+                                <label id="metres-elevation" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
+                                    <input type="radio" name="goal-metric" value="Metres Elevation"> Metres Elevation
                                 </label>
                             </div>
                         </div>
@@ -108,7 +117,7 @@
                                 <th>@(Math.Floor((double)((int)ch.goal * (int)ch.percentComplete / 100))) @ch.activity.goalMetric</th>
                                 <th>@ch.goal @ch.activity.goalMetric</th>
                                 <th>@(DateTime.Parse((string)ch.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)ch.endDateTime, CultureInfo.InvariantCulture).ToString())</th>
-                                <td><a href="#" class="goal-delete-ajax" data-id="@ch.challengeId">Delete</a></td>
+                                <td><div class="goal-delete-message" data-id="@ch.challengeId"></div><a href="#" class="goal-delete-ajax" data-id="@ch.challengeId">Delete</a></td>
                             </tr>
                         }
                     </tbody>
@@ -121,56 +130,21 @@
 <script>
     window.onload = function () {
         $(document).ready(function () {
-            $('#activity-type').change(function () {
-                var relevant_fields = {
-                        @foreach(var at in Model.ActivityTypes)
-                        {
-                             @Html.Raw("'" + at.name + "': {" +
-                                 "'distance': " + (at.uses_distance == "True" ? "true" : "false") + "," +
-                                 "'duration': " + (at.uses_duration == "True" ? "true" : "false") + "," +
-                                 "'quantity': " + (at.quantity_unit != "" ? "true" : "false") +
-                             "},");
-                        }
-                };
+            $('.goal-delete-ajax').click(function (event) {
+                event.preventDefault();
+                var link = $(this);
 
-                var selected_type = this.value;
-
-                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['distance']) {
-                    $('#distance').removeAttr("disabled");
-                } else {
-                    $('#distance').attr("disabled", "disabled");
-                    $('#distance').removeClass("active");
-                }
-
-                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['duration']) {
-                    $('#duration').removeAttr("disabled");
-                } else {
-                    $('#duration').attr("disabled", "disabled");
-                    $('#duration').removeClass("active");
-                }
-
-                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['quantity']) {
-                    $('#quantity').removeAttr("disabled");
-                } else {
-                    $('#quantity').attr("disabled", "disabled");
-                    $('#quantity').removeClass("active");
-                }
-            });
-
-            $('.goal-delete-ajax').click(function () {
                 $.ajax({
                     type: 'POST',
-                    url: '@Url.Action("GoalDeleteAjax", "Dashboard")' + '/' + $(this).data("id"),
+                    url: '@Url.Action("GoalDeleteAjax", "Dashboard")' + '/' + link.data("id"),
                     success: function (data, textStatus, jqXHR) {
-                        $('.goal-delete-message[data-id=' + $(this).data("id") + ']').html("<p>Goal deleted successfully.</p>");
-                        setTimeout(function () {
-                            $('.goal-delete-message[data-id=' + $(this).data("id") + ']').html("");
-                        }, 3000);
+                        $('.goal-delete-message[data-id=' + link.data("id") + ']').html("<p>Goal deleted successfully.</p>");
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
-                        $('.goal-delete-message[data-id=' + $(this).data("id") + ']').html("<p>Deletion failed</p>");
+                        $('.goal-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed</p>");
+                        console.log('.goal-delete-message[data-id=' + link.data("id") + ']')
                         setTimeout(function () {
-                            $('.goal-delete-message[data-id=' + $(this).data("id") + ']').html("");
+                            $('.goal-delete-message[data-id=' + link.data("id") + ']').html("");
                         }, 3000);
                     }
                 });

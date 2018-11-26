@@ -1,35 +1,67 @@
 [
   {
-    "activity_id": 1,
-    "activity_type": "Steps",
-    "start_time": "2018-11-19T08:58:45",
-    "quantity": {
-      "value": 7568,
-      "unit": "Steps"
-    }
+    "Id": 1,
+    "UserId": 1,
+    "StartTimestamp": "2018-11-19T08:58:45",
+    "EndTimestamp": "2018-11-19T08:58:45",
+    "Source": 0,
+    "ActivityType": 0,
+    "CaloriesBurnt": 0,
+    "AverageHeartRate": 0,
+    "StepsTaken": 7568,
+    "MetresTravelled": 0,
+    "MetresElevationGained": 0
   },
   {
-    "activity_id": 1,
-    "activity_type": "Steps",
-    "start_time": "2018-11-19T20:58:45",
-    "quantity": {
-      "value": 1568,
-      "unit": "Steps"
-    }
+    "Id": 2,
+    "UserId": 1,
+    "StartTimestamp": "2018-11-19T20:58:45",
+    "EndTimestamp": "2018-11-19T20:58:45",
+    "Source": 0,
+    "ActivityType": 0,
+    "CaloriesBurnt": 0,
+    "AverageHeartRate": 0,
+    "StepsTaken": 1254,
+    "MetresTravelled": 0,
+    "MetresElevationGained": 0
   },
   {
-    "activity_id": 0,
-    "start_time": "2018-11-19T08:58:45",
-    "activity_type": "Swimming",
-    "duration": 251200
+    "Id": 3,
+    "UserId": 1,
+    "StartTimestamp": "2018-11-19T20:58:45",
+    "EndTimestamp": "2018-11-19T20:58:45",
+    "Source": 0,
+    "ActivityType": 1,
+    "CaloriesBurnt": 358,
+    "AverageHeartRate": 85,
+    "StepsTaken": 0,
+    "MetresTravelled": 0,
+    "MetresElevationGained": 0
   },
   {
-    "activity_id": 1,
-    "activity_type": "Steps",
-    "start_time": "2018-11-18T12:58:45",
-    "quantity": {
-      "value": 3015,
-      "unit": "Steps"
-    }
+    "Id": 4,
+    "UserId": 1,
+    "StartTimestamp": "2018-11-20T20:58:45",
+    "EndTimestamp": "2018-11-20T20:58:45",
+    "Source": 0,
+    "ActivityType": 0,
+    "CaloriesBurnt": 0,
+    "AverageHeartRate": 0,
+    "StepsTaken": 7582,
+    "MetresTravelled": 0,
+    "MetresElevationGained": 0
+  },
+  {
+    "Id": 5,
+    "UserId": 1,
+    "StartTimestamp": "2018-11-21T20:58:45",
+    "EndTimestamp": "2018-11-21T20:58:45",
+    "Source": 0,
+    "ActivityType": 0,
+    "CaloriesBurnt": 0,
+    "AverageHeartRate": 0,
+    "StepsTaken": 5425,
+    "MetresTravelled": 0,
+    "MetresElevationGained": 0
   }
 ]
