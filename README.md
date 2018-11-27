@@ -19,3 +19,21 @@ AberFitness Health Dashboard Microservice
 * Must log audit trail data to GLaDOS
 * Has an interface for users to remove their data from the health-data-repository
 * Displays current rankings
+
+# Environment Variables
+
+## Required Keys (All Environments)
+
+| Environment Variable | Default | Description |
+|-|-|-|
+| ASPNETCORE_ENVIRONMENT | Production | Runtime environment, should be 'Development', 'Staging', or 'Production'. |
+
+## Required Keys (Production + Staging Environments)
+In addition to the above keys, you will also require:
+
+| Environment Variable | Default | Description |
+|-|-|-|
+| Kestrel__Certificates__Default__Path | N/A | Path to the PFX certificate to use for HTTPS. |
+| Kestrel__Certificates__Default__Password | N/A | Password for the HTTPS certificate. |
+| Health_Dashboard__ReverseProxyHostname | http://nginx | The internal docker hostname of the reverse proxy being used. |
+| Health_Dashboard__PathBase | /dashboard | The pathbase (name of the directory) that the app is being served from. |
