@@ -12,7 +12,8 @@ using System.Net;
 using Microsoft.Extensions.Primitives;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity; 
+using Microsoft.AspNetCore.Identity;
+using X.PagedList;
 
 namespace health_dashboard.Controllers
 {
@@ -146,10 +147,13 @@ namespace health_dashboard.Controllers
             return View();
         }
 
-        public async Task<IActionResult> RemoveData()
+        public async Task<IActionResult> RemoveData(int page = 1)
         {
             RemoveDataViewModel vm = new RemoveDataViewModel();
-            vm.Activities = await GetUserActivities();
+
+            var allActivities = await GetUserActivities();
+            vm.Activities = allActivities.ToPagedList(page, 20);
+
             vm.ActivityTypes = await GetActivityTypes();
 
             return View(vm);
@@ -323,7 +327,7 @@ namespace health_dashboard.Controllers
 
     public class RemoveDataViewModel
     {
-        public List<HealthActivity> Activities { get; set; }
+        public IPagedList<HealthActivity> Activities { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
     }
 }

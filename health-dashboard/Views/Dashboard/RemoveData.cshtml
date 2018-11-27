@@ -1,4 +1,8 @@
 ﻿@using System.Globalization;
+@using X.PagedList.Mvc.Common;
+@using X.PagedList.Mvc.Core;
+@using X.PagedList.Mvc;
+@using X.PagedList;
 
 @{
     Dictionary<int, string> ActivityTypeStrings = new Dictionary<int, string>();
@@ -34,20 +38,23 @@
                     <tbody>
                         @foreach (var a in Model.Activities)
                         {
-                        <tr>
-                            <td>@ActivityTypeStrings[a.ActivityType]</td>
-                            <td>@(DateTime.Parse((string)a.StartTimestamp, CultureInfo.InvariantCulture).ToString())<br/>
-                            @(DateTime.Parse((string)a.EndTimestamp, CultureInfo.InvariantCulture).ToString())</td>
-                            <td>@a.CaloriesBurnt</td>
-                            <td>@a.AverageHeartRate</td>
-                            <td>@a.StepsTaken</td>
-                            <td>@a.MetresTravelled</td>
-                            <td>@a.MetresElevationGained</td>
-                            <td><div class="activity-delete-message" data-id="@a.Id"></div><a href="#" class="activity-delete-ajax" data-id="@a.Id">Delete</a></td>
-                        </tr>
+                            <tr>
+                                <td>@ActivityTypeStrings[a.ActivityType]</td>
+                                <td>
+                                    @(DateTime.Parse((string)a.StartTimestamp, CultureInfo.InvariantCulture).ToString())<br />
+                                    @(DateTime.Parse((string)a.EndTimestamp, CultureInfo.InvariantCulture).ToString())
+                                </td>
+                                <td>@a.CaloriesBurnt</td>
+                                <td>@a.AverageHeartRate</td>
+                                <td>@a.StepsTaken</td>
+                                <td>@a.MetresTravelled</td>
+                                <td>@a.MetresElevationGained</td>
+                                <td><div class="activity-delete-message" data-id="@a.Id"></div><a href="#" class="activity-delete-ajax" data-id="@a.Id">Delete</a></td>
+                            </tr>
                         }
                     </tbody>
                 </table>
+                @Html.PagedListPager((IPagedList)Model.Activities, page => Url.Action("RemoveData", new { page }))
             </div>
         </div>
     </div>
