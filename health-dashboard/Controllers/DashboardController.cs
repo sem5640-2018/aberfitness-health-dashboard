@@ -75,7 +75,7 @@ namespace health_dashboard.Controllers
 
             vm.ActivityTypes = await GetActivityTypes();
 
-            List<HealthActivity> api_activities = await GetActivities();
+            List<HealthActivity> api_activities = await GetUserActivities();
 
             Dictionary<string, List<HealthActivity>> activities_by_type = new Dictionary<string, List<HealthActivity>>();
             /*
@@ -145,12 +145,28 @@ namespace health_dashboard.Controllers
         {
             return View();
         }
-        
-        public IActionResult RemoveData()
+
+        public async Task<IActionResult> RemoveData()
         {
-            return View();
+            RemoveDataViewModel vm = new RemoveDataViewModel();
+            vm.Activities = await GetUserActivities();
+            vm.ActivityTypes = await GetActivityTypes();
+
+            return View(vm);
         }
-        
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveDataAjax(int id)
+        {
+            var response = await DeleteActivity(id);
+
+            if ((int)response.StatusCode != 201)
+            {
+                return BadRequest();
+            }
+            return Ok();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
@@ -158,6 +174,20 @@ namespace health_dashboard.Controllers
         }
 
         /* ------ API Calls and Responses ------ */
+        private async Task<HttpResponseMessage> DeleteActivity(int id)
+        {
+            if (Environment.GetEnvironmentVariable("deployment") != null)
+            {
+                return await client.DeleteAsync("activity/" + id);
+            }
+
+            HttpResponseMessage r = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.Moved
+            };
+            return r;
+        }
+
         private async Task<HttpResponseMessage> DeleteGoal(int id)
         {
             if (Environment.GetEnvironmentVariable("deployment") != null)
@@ -172,10 +202,10 @@ namespace health_dashboard.Controllers
             return r;
         }
 
-        private async Task<List<HealthActivity>> GetActivities()
+        private async Task<List<HealthActivity>> GetUserActivities()
         {
             string api_activities_json;
-            if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if (Environment.GetEnvironmentVariable("deployment") != null)
             {
                 api_activities_json = await client.GetStringAsync("health-data-repositry/activity/find/{UUID}");
             }
@@ -186,7 +216,7 @@ namespace health_dashboard.Controllers
             return (List<HealthActivity>)JsonConvert.DeserializeObject(api_activities_json, typeof(List<HealthActivity>));
         }
 
-        private async Task<List<object>> GetActivityTypes()
+        private async Task<List<ActivityType>> GetActivityTypes()
         {
             string activity_types_json;
             if ( Environment.GetEnvironmentVariable("deployment") != null )
@@ -197,7 +227,7 @@ namespace health_dashboard.Controllers
             {
                 activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
             }
-            return (List<object>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<object>));
+            return (List<ActivityType>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<ActivityType>));
         }
         
         private async Task<List<Challenge>> GetChallenges()
@@ -273,7 +303,7 @@ namespace health_dashboard.Controllers
     // Is this a bodge?
     public class GoalsViewModel
     {
-        public List<object> ActivityTypes { get; set; }
+        public List<ActivityType> ActivityTypes { get; set; }
         public List<Challenge> Challenges { get; set; }
         public string Message { get; set; }
     }
@@ -281,13 +311,19 @@ namespace health_dashboard.Controllers
     public class IndexViewModel
     {
         public Dictionary<string, List<HealthActivity>> Activities { get; set; }
-        public List<object> ActivityTypes { get; set; }
+        public List<ActivityType> ActivityTypes { get; set; }
         public List<Challenge> Challenges { get; set; }
     }
 
     public class InputViewModel
     {
-        public List<object> ActivityTypes { get; set; }
+        public List<ActivityType> ActivityTypes { get; set; }
         public string Message { get; set; }
+    }
+
+    public class RemoveDataViewModel
+    {
+        public List<HealthActivity> Activities { get; set; }
+        public List<ActivityType> ActivityTypes { get; set; }
     }
 }
