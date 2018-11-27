@@ -27,6 +27,10 @@ AberFitness Health Dashboard Microservice
 | Environment Variable | Default | Description |
 |-|-|-|
 | ASPNETCORE_ENVIRONMENT | Production | Runtime environment, should be 'Development', 'Staging', or 'Production'. |
+| Health_Dashboard__ClientId | N/A | Gatekeeper client ID. |
+| Health_Dashboard__ClientSecret | N/A | Gatekeeper client secret. |
+| Health_Dashboard__GatekeeperUrl | N/A | Gatekeeper OAuth authroity URL. |
+
 
 ## Required Keys (Production + Staging Environments)
 In addition to the above keys, you will also require:
