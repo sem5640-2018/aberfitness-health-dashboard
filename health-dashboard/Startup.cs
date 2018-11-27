@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -16,9 +18,14 @@ namespace health_dashboard
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IConfigurationSection appConfig;
+        private readonly IHostingEnvironment environment;
+
+        public Startup(IConfiguration configuration, IHostingEnvironment environment)
         {
+            this.environment = environment;
             Configuration = configuration;
+            appConfig = configuration.GetSection("Health_Dashboard");
         }
 
         public IConfiguration Configuration { get; }
@@ -29,7 +36,7 @@ namespace health_dashboard
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => true;
+                options.CheckConsentNeeded = context => false;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
                 
             });
@@ -57,6 +64,7 @@ namespace health_dashboard
                 options.ClaimActions.MapJsonKey("locale", "locale");
                 options.ClaimActions.MapJsonKey("user_type", "user_type");
             });
+
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("Administrator", pb => pb.RequireClaim("user_type", "administrator"));
@@ -64,7 +72,21 @@ namespace health_dashboard
                 // Coordinator policy allows both Coordinators and Administrators
                 options.AddPolicy("Coordinator", pb => pb.RequireClaim("user_type", new[] { "administrator", "coordinator" }));
             });
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            
+            if (!environment.IsDevelopment())
+            {
+                services.Configure<ForwardedHeadersOptions>(options =>
+                {
+                    var proxyAddresses = Dns.GetHostAddresses(appConfig.GetValue<string>("ReverseProxyHostname", "http://nginx"));
+                    foreach (var ip in proxyAddresses)
+                    {
+                        options.KnownProxies.Add(ip);
+                    }
+                });
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -76,6 +98,17 @@ namespace health_dashboard
             }
             else
             {
+                var pathBase = appConfig.GetValue<string>("PathBase", "/dashboard");
+                app.UsePathBase(pathBase);
+                app.Use((context, next) =>
+                {
+                    context.Request.PathBase = new PathString(pathBase);
+                    return next();
+                });
+                app.UseForwardedHeaders(new ForwardedHeadersOptions
+                {
+                    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+                });
                 app.UseExceptionHandler("/Dashboard/Error");
                 app.UseHsts();
             }
