@@ -12,6 +12,7 @@ using System.Net;
 using Microsoft.Extensions.Primitives;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity; 
 
 namespace health_dashboard.Controllers
 {
@@ -76,13 +77,11 @@ namespace health_dashboard.Controllers
 
             List<HealthActivity> api_activities = await GetActivities();
 
-            Dictionary<string, Dictionary<string, List<HealthActivity>>> activities_by_type = new Dictionary<string, Dictionary<string, List<HealthActivity>>>();
+            Dictionary<string, List<HealthActivity>> activities_by_type = new Dictionary<string, List<HealthActivity>>();
             /*
              *  activities_by_type = [
-             *      [type] => [
-             *          [date] => [
-             *              HealthActivity,
-             *          ],
+             *      [date] => [
+             *          HealthActivity,
              *      ],
              *  ]
              *  
@@ -90,18 +89,14 @@ namespace health_dashboard.Controllers
 
             foreach (var a in api_activities)
             {
-                if (!activities_by_type.ContainsKey(a.activity_type))
+                DateTime startTime = DateTime.Parse(a.StartTimestamp);
+                // Just date - not the time
+                if (!activities_by_type.ContainsKey(startTime.ToShortDateString()))
                 {
-                    activities_by_type.Add(a.activity_type, new Dictionary<string, List<HealthActivity>>());
+                    activities_by_type.Add(startTime.ToShortDateString(), new List<HealthActivity>());
                 }
 
-                DateTime startTime = DateTime.Parse(a.start_time);
-                if (!activities_by_type[a.activity_type].ContainsKey(startTime.ToShortDateString()))
-                {
-                    activities_by_type[a.activity_type].Add(startTime.ToShortDateString(), new List<HealthActivity>());
-                }
-
-                activities_by_type[a.activity_type][startTime.ToShortDateString()].Add(a);
+                activities_by_type[startTime.ToShortDateString()].Add(a);
             }
 
             vm.Activities = activities_by_type;
@@ -221,13 +216,19 @@ namespace health_dashboard.Controllers
 
         private async Task<HttpResponseMessage> PostFormActivity()
         {
-            var activity = new NewHealthActivity
+            // Parsing null string problems
+            var activity = new HealthActivity
             {
-                start_time = Request.Form["start-time"],
-                activity_type = Request.Form["activity-type"],
-                distance = Request.Form["distance"],
-                duration = Request.Form["duration"],
-                quantity = int.Parse(Request.Form["quantity"])
+                UserId = 1, // Need to replace this with UserId
+                StartTimestamp = Request.Form["start-time"],
+                EndTimestamp = Request.Form["end-time"],
+                Source = -1,
+                ActivityType = StringValues.IsNullOrEmpty(Request.Form["activity-type"]) ? 0 : int.Parse(Request.Form["activity-type"]),
+                CaloriesBurnt = StringValues.IsNullOrEmpty(Request.Form["calories-burnt"]) ? 0 : int.Parse(Request.Form["calories-burnt"]),
+                AverageHeartRate = StringValues.IsNullOrEmpty(Request.Form["average-heart-rate"]) ? 0 : int.Parse(Request.Form["average-heart-rate"]),
+                StepsTaken = StringValues.IsNullOrEmpty(Request.Form["steps-taken"]) ? 0 : int.Parse(Request.Form["steps-taken"]),
+                MetresTravelled = StringValues.IsNullOrEmpty(Request.Form["metres-travelled"]) ? 0 : int.Parse(Request.Form["metres-travelled"]),
+                MetresElevationGained = StringValues.IsNullOrEmpty(Request.Form["metres-elevation-gained"]) ? 0 : int.Parse(Request.Form["metres-elevation-gained"])
             };
             var activity_json = JsonConvert.SerializeObject(activity);
 
@@ -251,19 +252,9 @@ namespace health_dashboard.Controllers
                 { "startDateTime", Request.Form["start-time"] },
                 { "endDateTime", Request.Form["end-time"] },
                 { "goal", Request.Form["target"] },
-                { "activity[activityName]", Request.Form["activity-type"] }
+                { "activity[activityId]", Request.Form["activity-type"] },
+                { "activity[goalMetric]", Request.Form["goal-metric"] }
             };
-
-            if (Request.Form["goal-metric"] == "distance")
-            {
-                values.Add("activity[goalMetric]", "Metres");
-            } else if (Request.Form["goal-metric"] == "duration")
-            {
-                values.Add("activity[goalMetric]", "Minutes");
-            } else if (Request.Form["goal-metric"] == "quantity")
-            {
-                values.Add("activity[goalMetric]", Request.Form["activity-type"]);
-            }
 
             var content = new FormUrlEncodedContent(values);
             if (Environment.GetEnvironmentVariable("deployment") != null)
@@ -289,7 +280,7 @@ namespace health_dashboard.Controllers
 
     public class IndexViewModel
     {
-        public Dictionary<string, Dictionary<string, List<HealthActivity>>> Activities { get; set; }
+        public Dictionary<string, List<HealthActivity>> Activities { get; set; }
         public List<object> ActivityTypes { get; set; }
         public List<Challenge> Challenges { get; set; }
     }

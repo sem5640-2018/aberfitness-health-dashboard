@@ -17,10 +17,18 @@
                 <form class="form-horizontal form-label-left" method="post" action="#">
                     <div class="form-group">
                         <label class="control-label col-md-3 col-sm-3 col-xs-12" for="start-time">
-                            Time of Activity
+                            Start Time
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
                             <input type="datetime-local" id="start-time" name="start-time" class="form-control col-md-7 col-xs-12" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" max="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="end-time">
+                            End Time
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input type="datetime-local" id="end-time" name="end-time" class="form-control col-md-7 col-xs-12" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" max="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
                         </div>
                     </div>
                     <div class="form-group">
@@ -32,33 +40,52 @@
                                 <option value=""></option>
                                 @foreach (var at in Model.ActivityTypes)
                                 {
-                                    <option value="@at.name">@at.name</option>
+                                    <option value="@at.Id">@at.Name</option>
                                 }
                             </select>
                         </div>
                     </div>
-                    <div class="form-group form-distance-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="distance">
-                            Distance (m)
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="calories-burnt">
+                            Calories Burnt
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="number" id="distance" name="distance" class="form-control col-md-7 col-xs-12" disabled="disabled" min="0" step="10">
+                            <input type="number" id="calories-burnt" name="calories-burnt" class="form-control col-md-7 col-xs-12" min="0" step="1">
                         </div>
                     </div>
-                    <div class="form-group form-duration-group">
-                        <label for="Duration" class="control-label col-md-3 col-sm-3 col-xs-12">Duration</label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input id="duration" class="form-control col-md-7 col-xs-12" type="time" name="duration" disabled="disabled">
-                        </div>
-                    </div>
-                    <div class="form-group form-quantity-group">
-                        <label for="quantity" class="control-label col-md-3 col-sm-3 col-xs-12">
-                            Quantity
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="average-heart-rate">
+                            Average Heart Rate
                         </label>
                         <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input id="quantity" class="date-picker form-control col-md-7 col-xs-12" type="number" disabled="disabled" min="0" step="0">
+                            <input type="number" id="average-heart-rate" name="average-heart-rate" class="form-control col-md-7 col-xs-12" min="0" step="1">
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="steps-taken">
+                            Steps Taken
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input type="number" id="steps-taken" name="steps-taken" class="form-control col-md-7 col-xs-12" min="0" step="1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="metres-travelled">
+                            Metres Travelled
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input type="number" id="metres-travelled" name="metres-travelled" class="form-control col-md-7 col-xs-12" min="0" step="1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="metres-elevation-gained">
+                            Elevation Gained (metres)
+                        </label>
+                        <div class="col-md-6 col-sm-6 col-xs-12">
+                            <input type="number" id="metres-elevation-gained" name="metres-elevation-gained" class="form-control col-md-7 col-xs-12" min="0" step="1">
+                        </div>
+                    </div>
+
                     <div class="ln_solid"></div>
                     <div class="form-group">
                         <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-5">
@@ -74,44 +101,7 @@
 <script>
     window.onload = function () {
         $(document).ready(function () {
-            $('#activity-type').change(function () {
-                var relevant_fields = {
-                    @foreach(var at in Model.ActivityTypes)
-                    {
-                         @Html.Raw("'" + at.name + "': {" +
-                             "'distance': " + (at.uses_distance == "True" ? "true" : "false") + "," +
-                             "'duration': " + (at.uses_duration == "True" ? "true" : "false") + "," +
-                             "'quantity': " + (at.quantity_unit != "" ? "true" : "false") +
-                         "},");
-                    }
-                };
-
-                var selected_type = this.value;
-
-                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['distance'] ) {
-                    $('#distance').removeAttr("disabled");
-                    $('#distance').attr("required", "required");
-                } else {
-                    $('#distance').attr("disabled", "disabled");
-                    $('#distance').removeAttr("required");
-                }
-
-                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['duration'] ) {
-                    $('#duration').removeAttr("disabled");
-                    $('#duration').attr("required", "required");
-                } else {
-                    $('#duration').attr("disabled", "disabled");
-                    $('#duration').removeAttr("required");
-                }
-
-                if (relevant_fields[selected_type] != null && relevant_fields[selected_type]['quantity'] ) {
-                    $('#quantity').removeAttr("disabled");
-                    $('#quantity').attr("required", "required");
-                } else {
-                    $('#quantity').attr("disabled", "disabled");
-                    $('#quantity').removeAttr("required");
-                }
-            });
+            // Do Nothing
         });
     };
 </script>
