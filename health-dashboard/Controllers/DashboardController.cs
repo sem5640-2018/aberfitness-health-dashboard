@@ -273,11 +273,10 @@ namespace health_dashboard.Controllers
                 MetresTravelled = StringValues.IsNullOrEmpty(Request.Form["metres-travelled"]) ? 0 : int.Parse(Request.Form["metres-travelled"]),
                 MetresElevationGained = StringValues.IsNullOrEmpty(Request.Form["metres-elevation-gained"]) ? 0 : int.Parse(Request.Form["metres-elevation-gained"])
             };
-            var activity_json = JsonConvert.SerializeObject(activity);
 
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                return await Client.PostAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity", new StringContent(activity_json, Encoding.UTF8, "application/json"));
+                return await Client.PostAsJsonAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity", activity);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -301,11 +300,10 @@ namespace health_dashboard.Controllers
                     activityName = Request.Form["goal-metric"]
                 }
             };
-
-            var challenge_json = JsonConvert.SerializeObject(challenge);
+            
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
             {
-                return await Client.PostAsync(AppConfig.GetValue<string>("ChallengesUrl") + "challenge", new StringContent(challenge_json, Encoding.UTF8, "application/json"));
+                return await Client.PostAsJsonAsync(AppConfig.GetValue<string>("ChallengesUrl") + "challenge", challenge);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
