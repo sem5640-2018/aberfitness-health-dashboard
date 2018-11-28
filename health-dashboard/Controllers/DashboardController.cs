@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using health_dashboard.Models;
@@ -12,15 +11,23 @@ using System.Net;
 using Microsoft.Extensions.Primitives;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using X.PagedList;
+using Microsoft.Extensions.Configuration;
+using System.Linq;
 
 namespace health_dashboard.Controllers
 {
+
     [Authorize]
     public class DashboardController : Controller
     {
-        private static readonly HttpClient client = new HttpClient();
+        private static readonly HttpClient Client = new HttpClient();
+        private static IConfiguration AppConfig;
+
+        public DashboardController(IConfiguration config )
+        {
+            AppConfig = config.GetSection("Health_Dashboard");
+        }
         
         [Authorize("Administrator")]
         public IActionResult Admin()
@@ -72,6 +79,7 @@ namespace health_dashboard.Controllers
         
         public async Task<IActionResult> Index()
         {
+
             IndexViewModel vm = new IndexViewModel();
 
             vm.ActivityTypes = await GetActivityTypes();
@@ -162,6 +170,7 @@ namespace health_dashboard.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveDataAjax(int id)
         {
+
             var response = await DeleteActivity(id);
 
             if ((int)response.StatusCode != 201)
@@ -180,28 +189,28 @@ namespace health_dashboard.Controllers
         /* ------ API Calls and Responses ------ */
         private async Task<HttpResponseMessage> DeleteActivity(int id)
         {
-            if (Environment.GetEnvironmentVariable("deployment") != null)
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                return await client.DeleteAsync("activity/" + id);
+                return await Client.DeleteAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/" + id);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.Moved
+                StatusCode = HttpStatusCode.ServiceUnavailable
             };
             return r;
         }
 
         private async Task<HttpResponseMessage> DeleteGoal(int id)
         {
-            if (Environment.GetEnvironmentVariable("deployment") != null)
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
             {
-                return await client.DeleteAsync("challenges/" + id);
+                return await Client.DeleteAsync(AppConfig.GetValue<string>("ChallengesUrl") + "challenges/" + id);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.Moved
+                StatusCode = HttpStatusCode.ServiceUnavailable
             };
             return r;
         }
@@ -209,9 +218,9 @@ namespace health_dashboard.Controllers
         private async Task<List<HealthActivity>> GetUserActivities()
         {
             string api_activities_json;
-            if (Environment.GetEnvironmentVariable("deployment") != null)
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                api_activities_json = await client.GetStringAsync("health-data-repositry/activity/find/{UUID}");
+                api_activities_json = await Client.GetStringAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/find/" + User.Claims.FirstOrDefault(c => c.Type == "sid").Value);
             }
             else
             {
@@ -223,9 +232,9 @@ namespace health_dashboard.Controllers
         private async Task<List<ActivityType>> GetActivityTypes()
         {
             string activity_types_json;
-            if ( Environment.GetEnvironmentVariable("deployment") != null )
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                activity_types_json = await client.GetStringAsync("health-data-repositry/activity-types");
+                activity_types_json = await Client.GetStringAsync(!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")) + "activity-types");
             }
             else
             {
@@ -237,9 +246,9 @@ namespace health_dashboard.Controllers
         private async Task<List<Challenge>> GetChallenges()
         {
             string challenges_json;
-            if (Environment.GetEnvironmentVariable("deployment") != null)
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
             {
-                challenges_json = await client.GetStringAsync("challenges/find/{UUID}");
+                challenges_json = await Client.GetStringAsync(AppConfig.GetValue<string>("ChallengesUrl") + "find/" + User.Claims.FirstOrDefault(c => c.Type == "sid").Value);
             }
             else
             {
@@ -253,7 +262,7 @@ namespace health_dashboard.Controllers
             // Parsing null string problems
             var activity = new HealthActivity
             {
-                UserId = 1, // Need to replace this with UserId
+                UserId = User.Claims.FirstOrDefault(c => c.Type == "sid").Value,
                 StartTimestamp = Request.Form["start-time"],
                 EndTimestamp = Request.Form["end-time"],
                 Source = -1,
@@ -266,14 +275,14 @@ namespace health_dashboard.Controllers
             };
             var activity_json = JsonConvert.SerializeObject(activity);
 
-            if (Environment.GetEnvironmentVariable("deployment") != null)
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                return await client.PostAsync("health-data-repositry/activity", new StringContent(activity_json, Encoding.UTF8, "application/json"));
+                return await Client.PostAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity", new StringContent(activity_json, Encoding.UTF8, "application/json"));
             }
 
             HttpResponseMessage r = new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.Moved
+                StatusCode = HttpStatusCode.ServiceUnavailable
             };
             return r;
         }
@@ -281,24 +290,27 @@ namespace health_dashboard.Controllers
         /* Needs changing to JSON */
         private async Task<HttpResponseMessage> PostFormChallenge()
         {
-            var values = new Dictionary<string, string>
+            var challenge = new Challenge
             {
-                { "startDateTime", Request.Form["start-time"] },
-                { "endDateTime", Request.Form["end-time"] },
-                { "goal", Request.Form["target"] },
-                { "activity[activityId]", Request.Form["activity-type"] },
-                { "activity[goalMetric]", Request.Form["goal-metric"] }
+                userId = User.Claims.FirstOrDefault(c => c.Type == "sid").Value,
+                startDateTime = Request.Form["start-time"],
+                endDateTime = Request.Form["end-time"],
+                goal = int.Parse(Request.Form["target"]),
+                activity = new ChallengeActivity {
+                    activityId = int.Parse(Request.Form["activity-type"]),
+                    activityName = Request.Form["goal-metric"]
+                }
             };
 
-            var content = new FormUrlEncodedContent(values);
-            if (Environment.GetEnvironmentVariable("deployment") != null)
+            var challenge_json = JsonConvert.SerializeObject(challenge);
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
             {
-                return await client.PostAsync("health-data-repositry/activity", content);
+                return await Client.PostAsync(AppConfig.GetValue<string>("ChallengesUrl") + "challenge", new StringContent(challenge_json, Encoding.UTF8, "application/json"));
             }
 
             HttpResponseMessage r = new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.Moved
+                StatusCode = HttpStatusCode.ServiceUnavailable
             };
             return r;
         }

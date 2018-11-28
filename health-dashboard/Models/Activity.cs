@@ -3,7 +3,7 @@
     public class HealthActivity
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         public string StartTimestamp { get; set; } // ISO8601 w/o Time Zone
         public string EndTimestamp { get; set; } // ISO8601 w/o Time Zone
         public int Source { get; set; }
