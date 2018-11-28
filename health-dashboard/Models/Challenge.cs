@@ -9,16 +9,7 @@
         public int percentComplete { get; set; }
         public int goal { get; set; }
         public bool repeat { get; set; }
-        public int userId { get; set; }
-    }
-    public class NewChallenge
-    {
-        public string startDateTime { get; set; }
-        public string endDateTime { get; set; }
-        public int activityId { get; set; }
-        public int goal { get; set; }
-        public bool repeat { get; set; }
-        public int userId { get; set; }
+        public string userId { get; set; }
     }
 
     public class ChallengeActivity
