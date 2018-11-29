@@ -222,7 +222,7 @@ namespace health_dashboard.Controllers
             List<HealthActivity> activities;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                var response = await Client.GetAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/find/" + User.Claims.FirstOrDefault(c => c.Type == "sid").Value);
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/find/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
                 activities = await response.Content.ReadAsAsync<List<HealthActivity>>();
             }
             else
@@ -254,7 +254,7 @@ namespace health_dashboard.Controllers
             List<Challenge> challenges;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
             {
-                var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengesUrl") + "find/" + User.Claims.FirstOrDefault(c => c.Type == "sid").Value);
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengesUrl") + "find/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
                 challenges = await response.Content.ReadAsAsync<List<Challenge>>();
             }
             else
@@ -270,7 +270,7 @@ namespace health_dashboard.Controllers
             // Parsing null string problems
             HealthActivity activity = new HealthActivity
             {
-                UserId = User.Claims.FirstOrDefault(c => c.Type == "sid").Value,
+                UserId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
                 StartTimestamp = Request.Form["start-time"],
                 EndTimestamp = Request.Form["end-time"],
                 Source = -1,
@@ -299,7 +299,7 @@ namespace health_dashboard.Controllers
         {
             Challenge challenge = new Challenge
             {
-                userId = User.Claims.FirstOrDefault(c => c.Type == "sid").Value,
+                userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
                 startDateTime = Request.Form["start-time"],
                 endDateTime = Request.Form["end-time"],
                 goal = int.Parse(Request.Form["target"]),
