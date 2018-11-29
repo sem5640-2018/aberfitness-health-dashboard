@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using health_dashboard.Services;
 
 namespace health_dashboard
 {
@@ -72,6 +73,11 @@ namespace health_dashboard
                 // Coordinator policy allows both Coordinators and Administrators
                 options.AddPolicy("Coordinator", pb => pb.RequireClaim("user_type", new[] { "administrator", "coordinator" }));
             });
+
+            services.AddHttpClient("healthDashboardHttpClient", client => {
+                //client.SomeOptions = "whatever httpclient opens you want to set go here"
+            });
+            services.AddSingleton<IApiClient, ApiClient>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 

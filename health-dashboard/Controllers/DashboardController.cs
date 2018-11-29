@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using X.PagedList;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
+using health_dashboard.Services;
 
 namespace health_dashboard.Controllers
 {
@@ -21,12 +22,13 @@ namespace health_dashboard.Controllers
     [Authorize]
     public class DashboardController : Controller
     {
-        private static readonly HttpClient Client = new HttpClient();
+        private static IApiClient Client;
         private static IConfiguration AppConfig;
 
-        public DashboardController(IConfiguration config )
+        public DashboardController(IConfiguration config, IApiClient client )
         {
             AppConfig = config.GetSection("Health_Dashboard");
+            Client = client;
         }
         
         [Authorize("Administrator")]
@@ -217,50 +219,56 @@ namespace health_dashboard.Controllers
 
         private async Task<List<HealthActivity>> GetUserActivities()
         {
-            string api_activities_json;
+            List<HealthActivity> activities;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                api_activities_json = await Client.GetStringAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/find/" + User.Claims.FirstOrDefault(c => c.Type == "sid").Value);
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/find/" + User.Claims.FirstOrDefault(c => c.Type == "sid").Value);
+                activities = await response.Content.ReadAsAsync<List<HealthActivity>>();
             }
             else
             {
-                api_activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
+                var activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
+                activities = (List<HealthActivity>)JsonConvert.DeserializeObject(activities_json, typeof(List<HealthActivity>));
             }
-            return (List<HealthActivity>)JsonConvert.DeserializeObject(api_activities_json, typeof(List<HealthActivity>));
+            return activities;
         }
 
         private async Task<List<ActivityType>> GetActivityTypes()
         {
-            string activity_types_json;
+            List<ActivityType> activity_types;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                activity_types_json = await Client.GetStringAsync(!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")) + "activity-types");
+                var response = await Client.GetAsync(AppConfig.GetValue<string>(AppConfig.GetValue<string>("HealthDataRepositoryUrl")) + "activity-types");
+                activity_types = await response.Content.ReadAsAsync<List<ActivityType>>();
             }
             else
             {
-                activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+                var activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+                activity_types = (List<ActivityType>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<ActivityType>));
             }
-            return (List<ActivityType>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<ActivityType>));
+            return activity_types;
         }
         
         private async Task<List<Challenge>> GetChallenges()
         {
-            string challenges_json;
+            List<Challenge> challenges;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
             {
-                challenges_json = await Client.GetStringAsync(AppConfig.GetValue<string>("ChallengesUrl") + "find/" + User.Claims.FirstOrDefault(c => c.Type == "sid").Value);
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengesUrl") + "find/" + User.Claims.FirstOrDefault(c => c.Type == "sid").Value);
+                challenges = await response.Content.ReadAsAsync<List<Challenge>>();
             }
             else
             {
-                challenges_json = System.IO.File.ReadAllText("./challenge-find-1.json");
+                var challenges_json = System.IO.File.ReadAllText("./challenge-find-1.json");
+                challenges = (List<Challenge>)JsonConvert.DeserializeObject(challenges_json, typeof(List<Challenge>));
             }
-            return (List<Challenge>)JsonConvert.DeserializeObject(challenges_json, typeof(List<Challenge>));
+            return challenges;
         }
 
         private async Task<HttpResponseMessage> PostFormActivity()
         {
             // Parsing null string problems
-            var activity = new HealthActivity
+            HealthActivity activity = new HealthActivity
             {
                 UserId = User.Claims.FirstOrDefault(c => c.Type == "sid").Value,
                 StartTimestamp = Request.Form["start-time"],
@@ -276,7 +284,7 @@ namespace health_dashboard.Controllers
 
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                return await Client.PostAsJsonAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity", activity);
+                return await Client.PostAsync<HealthActivity>(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity", activity);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -289,7 +297,7 @@ namespace health_dashboard.Controllers
         /* Needs changing to JSON */
         private async Task<HttpResponseMessage> PostFormChallenge()
         {
-            var challenge = new Challenge
+            Challenge challenge = new Challenge
             {
                 userId = User.Claims.FirstOrDefault(c => c.Type == "sid").Value,
                 startDateTime = Request.Form["start-time"],
@@ -303,7 +311,7 @@ namespace health_dashboard.Controllers
             
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
             {
-                return await Client.PostAsJsonAsync(AppConfig.GetValue<string>("ChallengesUrl") + "challenge", challenge);
+                return await Client.PostAsync<Challenge>(AppConfig.GetValue<string>("ChallengesUrl") + "challenge", challenge);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -314,7 +322,6 @@ namespace health_dashboard.Controllers
         }
     }
 
-    // Is this a bodge?
     public class GoalsViewModel
     {
         public List<ActivityType> ActivityTypes { get; set; }
