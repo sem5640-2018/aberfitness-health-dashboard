@@ -30,13 +30,25 @@ namespace health_dashboard.Controllers
             AppConfig = config.GetSection("Health_Dashboard");
             Client = client;
         }
-        
+
         [Authorize("Administrator")]
         public IActionResult Admin()
         {
+            // TODO Implement "Administrative Interface for managing users"
+            /*
+             * Within the context of this microservice, this should only require
+             * deleting data à la the RemoveData() action.
+             *
+             * Views should be reusable, just needs a parameter adding for the
+             * user that the admin would like to remove the data for.
+             *
+             * If we need the admin to be able to edit the data, then it's going
+             * to requre a little more work.
+             */
             return View();
         }
-        
+
+        // Currently doesn't care about the timeframe, in terms of a pass/fail or showing how long is left.
         public async Task<IActionResult> Goals()
         {
             GoalsViewModel vm = new GoalsViewModel();
@@ -66,7 +78,7 @@ namespace health_dashboard.Controllers
 
             return View(vm);
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> GoalDeleteAjax(int id)
         {
@@ -78,7 +90,8 @@ namespace health_dashboard.Controllers
             }
             return Ok();
         }
-        
+
+        // Currently only shows a graph for "Steps" activities
         public async Task<IActionResult> Index()
         {
 
@@ -86,6 +99,7 @@ namespace health_dashboard.Controllers
 
             vm.ActivityTypes = await GetActivityTypes();
 
+            // This may want to be a different method, if only the last month of data is desired
             List<HealthActivity> api_activities = await GetUserActivities();
 
             Dictionary<string, List<HealthActivity>> activities_by_type = new Dictionary<string, List<HealthActivity>>();
@@ -95,7 +109,7 @@ namespace health_dashboard.Controllers
              *          HealthActivity,
              *      ],
              *  ]
-             *  
+             *
              **/
 
             foreach (var a in api_activities)
@@ -114,19 +128,20 @@ namespace health_dashboard.Controllers
 
             vm.Challenges = await GetChallenges();
 
+            // There isn't current a different result if no challenge/activity data is found.
             return View(vm);
         }
-        
+
         public async Task<IActionResult> Input()
         {
             InputViewModel vm = new InputViewModel();
 
             vm.ActivityTypes = await GetActivityTypes();
-            
+
             if (Request.Method == "POST")
             {
                 var response = await PostFormActivity();
-                
+
                 // Add success / failure message
                 if ((int) response.StatusCode == 201)
                 {
@@ -136,24 +151,31 @@ namespace health_dashboard.Controllers
                     vm.Message = "Activity save failed. Please contact a coordinator or an administrator.";
                 }
             }
-            
+
             return View(vm);
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> InputAjax()
         {
             var response = await PostFormActivity();
-            
+
             if ((int)response.StatusCode != 201)
             {
                 return BadRequest();
             }
             return Ok();
         }
-        
+
         public IActionResult Rankings()
         {
+            // TODO Implement rankings using data from the user-groups and health-data-repository microservices
+            /*
+             * Should just require obtaining the user-group data, getting the
+             * activity data for each user within the group, filtering the data
+             * by the desired activity type, and sorting the data by total for
+             the relevant metric.
+             */
             return View();
         }
 
@@ -248,7 +270,7 @@ namespace health_dashboard.Controllers
             }
             return activity_types;
         }
-        
+
         private async Task<List<Challenge>> GetChallenges()
         {
             List<Challenge> challenges;
@@ -264,6 +286,8 @@ namespace health_dashboard.Controllers
             }
             return challenges;
         }
+
+        // TODO GetUserGroups() method
 
         private async Task<HttpResponseMessage> PostFormActivity()
         {
@@ -308,7 +332,7 @@ namespace health_dashboard.Controllers
                     activityName = Request.Form["goal-metric"]
                 }
             };
-            
+
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
             {
                 return await Client.PostAsync<Challenge>(AppConfig.GetValue<string>("ChallengesUrl") + "challenge", challenge);
