@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using X.PagedList;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
+using health_dashboard.Services;
 
 namespace health_dashboard.Controllers
 {
@@ -21,20 +22,33 @@ namespace health_dashboard.Controllers
     [Authorize]
     public class DashboardController : Controller
     {
-        private static readonly HttpClient Client = new HttpClient();
+        private static IApiClient Client;
         private static IConfiguration AppConfig;
 
-        public DashboardController(IConfiguration config )
+        public DashboardController(IConfiguration config, IApiClient client )
         {
             AppConfig = config.GetSection("Health_Dashboard");
+            Client = client;
         }
-        
+
         [Authorize("Administrator")]
         public IActionResult Admin()
         {
+            // TODO Implement "Administrative Interface for managing users"
+            /*
+             * Within the context of this microservice, this should only require
+             * deleting data à la the RemoveData() action.
+             *
+             * Views should be reusable, just needs a parameter adding for the
+             * user that the admin would like to remove the data for.
+             *
+             * If we need the admin to be able to edit the data, then it's going
+             * to requre a little more work.
+             */
             return View();
         }
-        
+
+        // Currently doesn't care about the timeframe, in terms of a pass/fail or showing how long is left.
         public async Task<IActionResult> Goals()
         {
             GoalsViewModel vm = new GoalsViewModel();
@@ -64,7 +78,7 @@ namespace health_dashboard.Controllers
 
             return View(vm);
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> GoalDeleteAjax(int id)
         {
@@ -76,7 +90,8 @@ namespace health_dashboard.Controllers
             }
             return Ok();
         }
-        
+
+        // Currently only shows a graph for "Steps" activities
         public async Task<IActionResult> Index()
         {
 
@@ -84,6 +99,7 @@ namespace health_dashboard.Controllers
 
             vm.ActivityTypes = await GetActivityTypes();
 
+            // This may want to be a different method, if only the last month of data is desired
             List<HealthActivity> api_activities = await GetUserActivities();
 
             Dictionary<string, List<HealthActivity>> activities_by_type = new Dictionary<string, List<HealthActivity>>();
@@ -93,7 +109,7 @@ namespace health_dashboard.Controllers
              *          HealthActivity,
              *      ],
              *  ]
-             *  
+             *
              **/
 
             foreach (var a in api_activities)
@@ -112,19 +128,20 @@ namespace health_dashboard.Controllers
 
             vm.Challenges = await GetChallenges();
 
+            // There isn't current a different result if no challenge/activity data is found.
             return View(vm);
         }
-        
+
         public async Task<IActionResult> Input()
         {
             InputViewModel vm = new InputViewModel();
 
             vm.ActivityTypes = await GetActivityTypes();
-            
+
             if (Request.Method == "POST")
             {
                 var response = await PostFormActivity();
-                
+
                 // Add success / failure message
                 if ((int) response.StatusCode == 201)
                 {
@@ -134,24 +151,31 @@ namespace health_dashboard.Controllers
                     vm.Message = "Activity save failed. Please contact a coordinator or an administrator.";
                 }
             }
-            
+
             return View(vm);
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> InputAjax()
         {
             var response = await PostFormActivity();
-            
+
             if ((int)response.StatusCode != 201)
             {
                 return BadRequest();
             }
             return Ok();
         }
-        
+
         public IActionResult Rankings()
         {
+            // TODO Implement rankings using data from the user-groups and health-data-repository microservices
+            /*
+             * Should just require obtaining the user-group data, getting the
+             * activity data for each user within the group, filtering the data
+             * by the desired activity type, and sorting the data by total for
+             the relevant metric.
+             */
             return View();
         }
 
@@ -217,52 +241,60 @@ namespace health_dashboard.Controllers
 
         private async Task<List<HealthActivity>> GetUserActivities()
         {
-            string api_activities_json;
+            List<HealthActivity> activities;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                api_activities_json = await Client.GetStringAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/find/" + User.Claims.FirstOrDefault(c => c.Type == "sid").Value);
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/find/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+                activities = await response.Content.ReadAsAsync<List<HealthActivity>>();
             }
             else
             {
-                api_activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
+                var activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
+                activities = (List<HealthActivity>)JsonConvert.DeserializeObject(activities_json, typeof(List<HealthActivity>));
             }
-            return (List<HealthActivity>)JsonConvert.DeserializeObject(api_activities_json, typeof(List<HealthActivity>));
+            return activities;
         }
 
         private async Task<List<ActivityType>> GetActivityTypes()
         {
-            string activity_types_json;
+            List<ActivityType> activity_types;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                activity_types_json = await Client.GetStringAsync(!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")) + "activity-types");
+                var response = await Client.GetAsync(AppConfig.GetValue<string>(AppConfig.GetValue<string>("HealthDataRepositoryUrl")) + "activity-types");
+                activity_types = await response.Content.ReadAsAsync<List<ActivityType>>();
             }
             else
             {
-                activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+                var activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
+                activity_types = (List<ActivityType>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<ActivityType>));
             }
-            return (List<ActivityType>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<ActivityType>));
+            return activity_types;
         }
-        
+
         private async Task<List<Challenge>> GetChallenges()
         {
-            string challenges_json;
+            List<Challenge> challenges;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
             {
-                challenges_json = await Client.GetStringAsync(AppConfig.GetValue<string>("ChallengesUrl") + "find/" + User.Claims.FirstOrDefault(c => c.Type == "sid").Value);
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengesUrl") + "find/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+                challenges = await response.Content.ReadAsAsync<List<Challenge>>();
             }
             else
             {
-                challenges_json = System.IO.File.ReadAllText("./challenge-find-1.json");
+                var challenges_json = System.IO.File.ReadAllText("./challenge-find-1.json");
+                challenges = (List<Challenge>)JsonConvert.DeserializeObject(challenges_json, typeof(List<Challenge>));
             }
-            return (List<Challenge>)JsonConvert.DeserializeObject(challenges_json, typeof(List<Challenge>));
+            return challenges;
         }
+
+        // TODO GetUserGroups() method
 
         private async Task<HttpResponseMessage> PostFormActivity()
         {
             // Parsing null string problems
-            var activity = new HealthActivity
+            HealthActivity activity = new HealthActivity
             {
-                UserId = User.Claims.FirstOrDefault(c => c.Type == "sid").Value,
+                UserId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
                 StartTimestamp = Request.Form["start-time"],
                 EndTimestamp = Request.Form["end-time"],
                 Source = -1,
@@ -276,7 +308,7 @@ namespace health_dashboard.Controllers
 
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                return await Client.PostAsJsonAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity", activity);
+                return await Client.PostAsync<HealthActivity>(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity", activity);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -289,9 +321,9 @@ namespace health_dashboard.Controllers
         /* Needs changing to JSON */
         private async Task<HttpResponseMessage> PostFormChallenge()
         {
-            var challenge = new Challenge
+            Challenge challenge = new Challenge
             {
-                userId = User.Claims.FirstOrDefault(c => c.Type == "sid").Value,
+                userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
                 startDateTime = Request.Form["start-time"],
                 endDateTime = Request.Form["end-time"],
                 goal = int.Parse(Request.Form["target"]),
@@ -300,10 +332,10 @@ namespace health_dashboard.Controllers
                     activityName = Request.Form["goal-metric"]
                 }
             };
-            
+
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
             {
-                return await Client.PostAsJsonAsync(AppConfig.GetValue<string>("ChallengesUrl") + "challenge", challenge);
+                return await Client.PostAsync<Challenge>(AppConfig.GetValue<string>("ChallengesUrl") + "challenge", challenge);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -314,7 +346,6 @@ namespace health_dashboard.Controllers
         }
     }
 
-    // Is this a bodge?
     public class GoalsViewModel
     {
         public List<ActivityType> ActivityTypes { get; set; }
