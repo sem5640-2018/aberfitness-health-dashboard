@@ -113,11 +113,11 @@
                         @foreach (var ch in Model.Challenges)
                         {
                             <tr>
-                                <th>@ch.activity.activityName</th>
-                                <th>@(Math.Floor((double)((int)ch.goal * (int)ch.percentComplete / 100))) @ch.activity.goalMetric</th>
-                                <th>@ch.goal @ch.activity.goalMetric</th>
-                                <th>@(DateTime.Parse((string)ch.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)ch.endDateTime, CultureInfo.InvariantCulture).ToString())</th>
-                                <td><div class="goal-delete-message" data-id="@ch.challengeId"></div><a href="#" class="goal-delete-ajax" data-id="@ch.challengeId">Delete</a></td>
+                                <th>@ch.Activity.ActivityName</th>
+                                <th>@(Math.Floor((double)((int)ch.Goal * (int)ch.PercentComplete / 100))) @ch.Activity.GoalMetric</th>
+                                <th>@ch.Goal @ch.Activity.GoalMetric</th>
+                                <th>@(DateTime.Parse((string)ch.StartDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)ch.EndDateTime, CultureInfo.InvariantCulture).ToString())</th>
+                                <td><div class="goal-delete-message" data-id="@ch.ChallengeId"></div><a href="#" class="goal-delete-ajax" data-id="@ch.ChallengeId">Delete</a></td>
                             </tr>
                         }
                     </tbody>

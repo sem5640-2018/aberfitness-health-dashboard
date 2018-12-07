@@ -51,9 +51,11 @@ namespace health_dashboard.Controllers
         // Currently doesn't care about the timeframe, in terms of a pass/fail or showing how long is left.
         public async Task<IActionResult> Goals()
         {
-            GoalsViewModel vm = new GoalsViewModel();
-            vm.ActivityTypes = await GetActivityTypes();
-            vm.Challenges = await GetChallenges();
+            GoalsViewModel vm = new GoalsViewModel
+            {
+                ActivityTypes = await GetActivityTypes(),
+                Challenges = await GetChallenges()
+            };
 
             if (Request.Method == "POST")
             {
@@ -100,7 +102,7 @@ namespace health_dashboard.Controllers
             vm.ActivityTypes = await GetActivityTypes();
 
             // This may want to be a different method, if only the last month of data is desired
-            List<HealthActivity> api_activities = await GetUserActivities();
+            List<HealthActivity> api_activities = await GetUserActivities(null);
 
             Dictionary<string, List<HealthActivity>> activities_by_type = new Dictionary<string, List<HealthActivity>>();
             /*
@@ -167,26 +169,33 @@ namespace health_dashboard.Controllers
             return Ok();
         }
 
-        public IActionResult Rankings()
+        public async Task<IActionResult> Rankings()
         {
+
+
             // TODO Implement rankings using data from the user-groups and health-data-repository microservices
             /*
              * Should just require obtaining the user-group data, getting the
              * activity data for each user within the group, filtering the data
              * by the desired activity type, and sorting the data by total for
-             the relevant metric.
+             * the relevant metric.
              */
+
+            // get all groups with members and their members
+            // get activity data for each group member
+            // extract desired activity from data
+            // get total of data per group
             return View();
         }
 
         public async Task<IActionResult> RemoveData(int page = 1)
         {
-            RemoveDataViewModel vm = new RemoveDataViewModel();
-
-            var allActivities = await GetUserActivities();
-            vm.Activities = allActivities.ToPagedList(page, 20);
-
-            vm.ActivityTypes = await GetActivityTypes();
+            var allActivities = await GetUserActivities(null);
+            RemoveDataViewModel vm = new RemoveDataViewModel
+            {
+                Activities = allActivities.ToPagedList(page, 20),
+                ActivityTypes = await GetActivityTypes()
+            };
 
             return View(vm);
         }
@@ -239,12 +248,13 @@ namespace health_dashboard.Controllers
             return r;
         }
 
-        private async Task<List<HealthActivity>> GetUserActivities()
+        private async Task<List<HealthActivity>> GetUserActivities(int? userId)
         {
             List<HealthActivity> activities;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                var response = await Client.GetAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/find/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/find/" 
+                    + (userId.Equals(null)? User.Claims.FirstOrDefault(c => c.Type == "sub").Value : userId.Value.ToString()));
                 activities = await response.Content.ReadAsAsync<List<HealthActivity>>();
             }
             else
@@ -288,6 +298,38 @@ namespace health_dashboard.Controllers
         }
 
         // TODO GetUserGroups() method
+        private async Task<List<Group>> GetUserGroups()
+        {
+            List<Group> groups;
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
+            {
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/");
+                groups = await response.Content.ReadAsAsync<List<Group>>();
+            }
+            else
+            {
+                var groups_json = System.IO.File.ReadAllText("./group-find-all.json");
+                groups = (List<Group>)JsonConvert.DeserializeObject(groups_json, typeof(List<Group>));
+            }
+            return groups;
+        }
+
+        // TODO GetUserGroupWithMembers() method
+        private async Task<GroupWithMembers> GetUserGroupWithMembers(int groupId)
+        {
+            GroupWithMembers group;
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
+            {
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/" + groupId);
+                group = await response.Content.ReadAsAsync<GroupWithMembers>();
+            }
+            else
+            {
+                var group_json = System.IO.File.ReadAllText("./group-find-1-detailed.json");
+                group = (GroupWithMembers)JsonConvert.DeserializeObject(group_json, typeof(GroupWithMembers));
+            }
+            return group;
+        }
 
         private async Task<HttpResponseMessage> PostFormActivity()
         {
@@ -297,7 +339,7 @@ namespace health_dashboard.Controllers
                 UserId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
                 StartTimestamp = Request.Form["start-time"],
                 EndTimestamp = Request.Form["end-time"],
-                Source = -1,
+                Source = Request.Form["source"],
                 ActivityType = StringValues.IsNullOrEmpty(Request.Form["activity-type"]) ? 0 : int.Parse(Request.Form["activity-type"]),
                 CaloriesBurnt = StringValues.IsNullOrEmpty(Request.Form["calories-burnt"]) ? 0 : int.Parse(Request.Form["calories-burnt"]),
                 AverageHeartRate = StringValues.IsNullOrEmpty(Request.Form["average-heart-rate"]) ? 0 : int.Parse(Request.Form["average-heart-rate"]),
@@ -323,13 +365,13 @@ namespace health_dashboard.Controllers
         {
             Challenge challenge = new Challenge
             {
-                userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
-                startDateTime = Request.Form["start-time"],
-                endDateTime = Request.Form["end-time"],
-                goal = int.Parse(Request.Form["target"]),
-                activity = new ChallengeActivity {
-                    activityId = int.Parse(Request.Form["activity-type"]),
-                    activityName = Request.Form["goal-metric"]
+                StartDateTime = Request.Form["start-time"],
+                EndDateTime = Request.Form["end-time"],
+                Goal = int.Parse(Request.Form["target"]),
+                Activity = new ChallengeActivity
+                {
+                    ActivityId = int.Parse(Request.Form["activity-type"]),
+                    ActivityName = Request.Form["goal-metric"]
                 }
             };
 
