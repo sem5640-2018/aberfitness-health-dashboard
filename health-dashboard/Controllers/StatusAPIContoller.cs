@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace booking_facilities.Controllers
+namespace health_dashboard.Controllers
 {
     [Route("/api/[controller]")]
     [ApiController]
