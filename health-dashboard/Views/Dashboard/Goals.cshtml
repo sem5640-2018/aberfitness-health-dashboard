@@ -1,83 +1,58 @@
 ﻿@using System.Globalization;
 
 <div class="row">
-    <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel tile">
-            <div class="x_title">
-                <h2>Add a Personal Goal</h2>
-                <br />
-                <div class="clearfix"></div>
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="box-title">Add a Personal Goal</h1>
             </div>
-            <div class="x_content">
+            <div class="card-body">
                 @if (Model.Message != null)
                 {
                     <div>
                         @Model.Message
                     </div>
                 }
-                <form class="form-horizontal form-label-left" method="post" action="#">
+                <form method="post" action="#">
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="activity-type">
+                        <label class="form-control-label" for="activity-type">
                             Activity Type<span class="required">*</span>
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <select id="activity-type" name="activity-type" class="form-control col-md-7 col-xs-12" required="required">
-                                <option value=""></option>
-                                @foreach (var at in Model.ActivityTypes)
-                                {
-                                    <option value="@at.Id">@at.Name</option>
-                                }
-                            </select>
-                        </div>
+                        <select id="activity-type" name="activity-type" class="form-control" required="required">
+                            <option value="" label="Choose an Activity Type..."></option>
+                            @foreach (var at in Model.ActivityTypes)
+                            {
+                                <option value="@at.Id">@at.Name</option>
+                            }
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="target">
+                        <label class="form-control-label" for="target">
                             Target
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="number" id="target" name="target" class="form-control col-md-7 col-xs-12" value="0">
-                        </div>
+                        <input type="number" id="target" name="target" class="form-control" value="0">
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12">Goal Metric</label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <div id="" class="btn-group" data-toggle="buttons">
-                                <label id="time-seconds" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
-                                    <input type="radio" name="goal-metric" value="Seconds"> Time (Seconds)
-                                </label>
-                                <label id="time-minutes" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
-                                    <input type="radio" name="goal-metric" value="Minutes"> Time (Minutes)
-                                </label>
-                                <label id="calories-burnt" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
-                                    <input type="radio" name="goal-metric" value="Calories"> Calories Burnt
-                                </label>
-                                <label id="steps" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
-                                    <input type="radio" name="goal-metric" value="Steps"> Steps
-                                </label>
-                                <label id="metres-travelled" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
-                                    <input type="radio" name="goal-metric" value="Metres"> Metres Travelled
-                                </label>
-                                <label id="metres-elevation" class="btn btn-default" data-toggle-class="btn-primary" data-toggle-passive-class="btn-default">
-                                    <input type="radio" name="goal-metric" value="Metres Elevation"> Metres Elevation
-                                </label>
-                            </div>
-                        </div>
+                        <label class="form-control-label">Goal Metric</label>
+                        <select id="activity-type" name="activity-type" class="form-control" required="required">
+                            <option value="" label="Choose a Goal Metric..."></option>
+                            <option value="Calories">Calories Burnt</option>
+                            <option value="StepsTaken">Steps</option>
+                            <option value="MetresTravelled">Metres Travelled</option>
+                            <option value="MetresElevationGained">Metres Elevation Gained</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="start-time">
+                        <label class="form-control-label" for="start-time">
                             Start Time
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="datetime-local" id="start-time" name="start-time" class="form-control col-md-7 col-xs-12" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
-                        </div>
+                        <input type="datetime-local" id="start-time" name="start-time" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="end-time">
+                        <label class="form-control-label" for="end-time">
                             End Time
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="datetime-local" id="end-time" name="end-time" class="form-control col-md-7 col-xs-12" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
-                        </div>
+                        <input type="datetime-local" id="end-time" name="end-time" class="form-control" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
                     </div>
                     <div class="ln_solid"></div>
                     <div class="form-group">
@@ -91,14 +66,12 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel tile">
-            <div class="x_title">
-                <h2>Your Goals</h2>
-                <br />
-                <div class="clearfix"></div>
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="box-title">Your Goals</h2>
             </div>
-            <div class="x_content">
+            <div class="card-body">
                 <table id="datatable" class="table table-striped table-bordered">
                     <thead>
                         <tr>
@@ -113,10 +86,10 @@
                         @foreach (var ch in Model.Challenges)
                         {
                             <tr>
-                                <th>@ch.activity.activityName</th>
-                                <th>@(Math.Floor((double)((int)ch.goal * (int)ch.percentComplete / 100))) @ch.goalMetric</th>
-                                <th>@ch.goal @ch.goalMetric</th>
-                                <th>@(DateTime.Parse((string)ch.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)ch.endDateTime, CultureInfo.InvariantCulture).ToString())</th>
+                                <td>@ch.activity.activityName</td>
+                                <td>@(Math.Floor((double)((int)ch.goal * (int)ch.percentComplete / 100))) @ch.goalMetric</td>
+                                <td>@ch.goal @ch.goalMetric</td>
+                                <td>@(DateTime.Parse((string)ch.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)ch.endDateTime, CultureInfo.InvariantCulture).ToString())</td>
                                 <td><div class="goal-delete-message" data-id="@ch.challengeId"></div><a href="#" class="goal-delete-ajax" data-id="@ch.challengeId">Delete</a></td>
                             </tr>
                         }
@@ -129,27 +102,33 @@
 
 <script>
     window.onload = function () {
-        $(document).ready(function () {
-            $('.goal-delete-ajax').click(function (event) {
+        jQuery(document).ready(function () {
+            jQuery('.goal-delete-ajax').click(function (event) {
                 if (window.confirm("Are you sure you wish to delete that goal?")) {
                     event.preventDefault();
-                    var link = $(this);
+                    var link = jQuery(this);
 
-                    $.ajax({
+                    jQuery.ajax({
                         type: 'POST',
                         url: '@Url.Action("GoalDeleteAjax", "Dashboard")' + '/' + link.data("id"),
                         success: function (data, textStatus, jqXHR) {
-                            $('.goal-delete-message[data-id=' + link.data("id") + ']').html("<p>Goal deleted successfully.</p>");
+                            jQuery('.goal-delete-message[data-id=' + link.data("id") + ']').html("<p>Goal deleted successfully.</p>");
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
                             $('.goal-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed</p>");
                             console.log('.goal-delete-message[data-id=' + link.data("id") + ']')
                             setTimeout(function () {
-                                $('.goal-delete-message[data-id=' + link.data("id") + ']').html("");
+                                jQuery('.goal-delete-message[data-id=' + link.data("id") + ']').html("");
                             }, 3000);
                         }
                     });
                 }
+            });
+
+            jQuery('.standardSelect').chosen({
+                disable_search_threshold: 10,
+                no_results_text: "Oops, nothing found!",
+                width: "100%"
             });
         });
     };
