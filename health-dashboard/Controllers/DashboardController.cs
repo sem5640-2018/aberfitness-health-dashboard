@@ -104,7 +104,10 @@ namespace health_dashboard.Controllers
             vm.ActivityTypes = await GetActivityTypes();
 
             // This may want to be a different method, if only the last month of data is desired
-            List<HealthActivity> api_activities = await GetUserActivities(null);
+            DateTime today = DateTime.Today;
+            DateTime weekAgo = DateTime.Today.AddDays(-7);
+
+            List<HealthActivity> api_activities = await GetUserActivities(null, weekAgo.ToShortDateString(), today.ToShortDateString());
 
             Dictionary<string, List<HealthActivity>> activities_by_type = new Dictionary<string, List<HealthActivity>>();
             /*
@@ -173,61 +176,65 @@ namespace health_dashboard.Controllers
 
         public async Task<IActionResult> Rankings(int page = 1)
         {
+            RankingsViewModel vm = new RankingsViewModel();
+
             List<HealthActivity> userActivities = new List<HealthActivity>();
             List<HealthActivity> userActivitiesCombined = new List<HealthActivity>();
             bool activityAlreadyAdded;
-            GroupWithMembers groupWithMembers = await GetUsersGroup();
-            for (int i = 0; i < groupWithMembers.Members.Length; i++)
+            GroupWithMembers groupWithMembers = await GetGroupOfUser();
+            if (groupWithMembers != null)
             {
-                userActivities = await GetUserActivities(groupWithMembers.Members[i].UserId);
-                foreach (HealthActivity ha in userActivities)
+                for (int i = 0; i < groupWithMembers.Members.Length; i++)
                 {
-                    activityAlreadyAdded = false;
-                    foreach (HealthActivity hac in userActivitiesCombined)
+                    userActivities = await GetUserActivities(groupWithMembers.Members[i].UserId);
+                    foreach (HealthActivity ha in userActivities)
                     {
-                        if (hac.activityTypeId.Equals(ha.activityTypeId) && hac.userId.Equals(ha.userId))
+                        activityAlreadyAdded = false;
+                        foreach (HealthActivity hac in userActivitiesCombined)
                         {
-                            // do any other checks (probably to do with activity dates) here
-                            hac.caloriesBurnt += ha.caloriesBurnt;
-                            hac.metresElevationGained += ha.metresElevationGained;
-                            hac.metresTravelled += ha.metresTravelled;
-                            hac.stepsTaken += ha.stepsTaken;
-                            activityAlreadyAdded = true;
-                            break;
+                            if (hac.activityTypeId.Equals(ha.activityTypeId) && hac.userId.Equals(ha.userId))
+                            {
+                                // do any other checks (probably to do with activity dates) here
+                                hac.caloriesBurnt += ha.caloriesBurnt;
+                                hac.metresElevationGained += ha.metresElevationGained;
+                                hac.metresTravelled += ha.metresTravelled;
+                                hac.stepsTaken += ha.stepsTaken;
+                                activityAlreadyAdded = true;
+                                break;
+                            }
+                        }
+                        if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
+                    }
+                }
+                userActivitiesCombined = userActivitiesCombined.OrderByDescending(h => h.caloriesBurnt).ToList();
+                List<string> userList = new List<string>();
+                foreach (HealthActivity ha in userActivitiesCombined)
+                {
+                    userList.Add(ha.userId);
+                }
+
+                string GetUsersPath = AppConfig.GetValue<string>("GatekeeperUrl") + "api/Users/Batch";
+                var response = await Client.PostAsync(GetUsersPath, userList.Distinct());
+                JArray jsonArrayOfUsers = JArray.Parse(await response.Content.ReadAsStringAsync());
+                foreach (HealthActivity ha in userActivitiesCombined)
+                {
+                    foreach (JObject j in jsonArrayOfUsers)
+                    {
+                        if (ha.userId == j.GetValue("id").ToString())
+                        {
+                            ha.userId = j.GetValue("email").ToString();
                         }
                     }
-                    if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
                 }
-            }
-            userActivitiesCombined = userActivitiesCombined.OrderByDescending(h => h.caloriesBurnt).ToList();
-            List<string> userList = new List<string>();
-            foreach (HealthActivity ha in userActivitiesCombined)
+                
+                vm.ActivityTypes = await GetActivityTypes();
+                vm.Activities = userActivitiesCombined.ToPagedList(page, 20);
+                vm.RenderTables = true;
+            } else
             {
-                userList.Add(ha.userId);
+                vm.Message = "You aren't currently a member of a group. Would you like to <a href=" + AppConfig.GetValue<string>("UserGroupsUrl") + ">join one?</a>";
+                vm.RenderTables = false;
             }
-
-            string GetUsersPath = AppConfig.GetValue<string>("GatekeeperUrl") + "api/Users/Batch";
-            var response = await Client.PostAsync(GetUsersPath, userList.Distinct());
-            JArray jsonArrayOfUsers = JArray.Parse(await response.Content.ReadAsStringAsync());
-            foreach (HealthActivity ha in userActivitiesCombined)
-            {
-                foreach (JObject j in jsonArrayOfUsers)
-                {
-                    if (ha.userId == j.GetValue("id").ToString())
-                    {
-                        ha.userId = j.GetValue("email").ToString();
-                    }
-                }
-            }
-
-            List<ActivityType> ActivityTypes = new List<ActivityType>();
-
-            RankingsViewModel vm = new RankingsViewModel
-            {
-                ActivityTypes = await GetActivityTypes(),
-                Activities = userActivitiesCombined.ToPagedList(page, 20),
-                CurrentActivityId = 1,
-            };
 
             
             // TODO Implement rankings using data from the user-groups and health-data-repository microservices
@@ -309,12 +316,22 @@ namespace health_dashboard.Controllers
             return r;
         }
 
-        private async Task<List<HealthActivity>> GetUserActivities(string userId)
+        private async Task<List<HealthActivity>> GetUserActivities(string userId, string from = null, string to = null)
         {
+            if (from == null ^ to == null)
+            {
+                throw new ArgumentException();
+            }
+
             List<HealthActivity> activities;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
                 string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/ByUser/" + (String.IsNullOrEmpty(userId) ? User.Claims.FirstOrDefault(c => c.Type == "sub").Value : userId);
+                if ( from != null)
+                {
+                    path += "?from=" + from + "&to=" + to;
+                }
+
                 var response = await Client.GetAsync(path);
                 activities = await response.Content.ReadAsAsync<List<HealthActivity>>();
             }
@@ -394,7 +411,7 @@ namespace health_dashboard.Controllers
         }
 
         // TODO GetUserGroups() method
-        private async Task<GroupWithMembers> GetUsersGroup()
+        private async Task<GroupWithMembers> GetGroupOfUser()
         {
             GroupWithMembers group;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
@@ -501,6 +518,7 @@ namespace health_dashboard.Controllers
     {
         public IPagedList<HealthActivity> Activities { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
-        public int CurrentActivityId { get; set; }
+        public string Message { get; set; }
+        public bool RenderTables { get; set; }
     }
 }
