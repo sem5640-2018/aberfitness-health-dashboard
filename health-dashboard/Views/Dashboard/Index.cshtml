@@ -9,7 +9,7 @@
                 var stepCount = 0;
                 foreach (HealthActivity ha in day.Value)
                 {
-                    stepCount += ha.StepsTaken;
+                    stepCount += ha.stepsTaken;
                 }
                 @Html.Raw(stepCount);
             }
@@ -92,7 +92,7 @@
                 {
                     <div class="widget_summary">
                         <div class="w_left w_25">
-                            <span>@ch.goal @ch.activity.goalMetric of @ch.activity.activityName</span>
+                            <span>@ch.goal @ch.goalMetric of @ch.activity.activityName</span>
                         </div>
                         <div class="w_center w_55">
                             <div class="progress">
@@ -121,7 +121,7 @@
                 {
                     <div class="widget_summary">
                         <div class="w_left w_25">
-                            <span>@ch.goal @ch.activity.goalMetric  @ch.activity.activityName</span>
+                            <span>@ch.goal @ch.goalMetric  @ch.activity.activityName</span>
                         </div>
                         <div class="w_center w_55">
                             <div class="progress">
@@ -168,7 +168,7 @@
                                         var stepCount = 0;
                                         foreach (HealthActivity ha in day.Value)
                                         {
-                                            stepCount += ha.StepsTaken;
+                                            stepCount += ha.stepsTaken;
                                         }
                                         var outString = string.Concat(stepCount, ',');
                                         @Html.Raw(outString);

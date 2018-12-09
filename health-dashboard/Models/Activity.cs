@@ -2,17 +2,18 @@
 {
     public class HealthActivity
     {
-        public int Id { get; set; }
-        public string UserId { get; set; }
-        public string StartTimestamp { get; set; } // ISO8601 w/o Time Zone
-        public string EndTimestamp { get; set; } // ISO8601 w/o Time Zone
-        public int Source { get; set; }
-        public int ActivityType { get; set; }
-        public int CaloriesBurnt { get; set; }
-        public int AverageHeartRate { get; set; }
-        public int StepsTaken { get; set; }
-        public int MetresTravelled { get; set; }
-        public int MetresElevationGained { get; set; }
+        public int id { get; set; }
+        public string userId { get; set; }
+        public string startTimestamp { get; set; } // ISO8601 w/o Time Zone
+        public string endTimestamp { get; set; } // ISO8601 w/o Time Zone
+        public string source { get; set; }
+        public int activityTypeId { get; set; }
+        public string activityType { get; set; }
+        public int caloriesBurnt { get; set; }
+        public int averageHeartRate { get; set; }
+        public int stepsTaken { get; set; }
+        public double metresTravelled { get; set; }
+        public double metresElevationGained { get; set; }
     }
 }
 

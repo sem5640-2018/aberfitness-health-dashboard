@@ -47,7 +47,7 @@ namespace health_dashboard.Services
                 // The ApiResourceName of the resources you want to access.
                 // Other valid values might be `comms`, `health_data_repository`, etc.
                 // Ask in #dev-gatekeeper for help
-                Scope = "gatekeeper"
+                Scope = "gatekeeper health_data_repository user_groups challenges"
             };
             var response = await client.RequestClientCredentialsTokenAsync(tokenRequest);
             if (response.IsError)

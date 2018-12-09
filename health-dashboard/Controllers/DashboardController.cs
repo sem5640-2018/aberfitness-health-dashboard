@@ -15,6 +15,7 @@ using X.PagedList;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
 using health_dashboard.Services;
+using Newtonsoft.Json.Linq;
 
 namespace health_dashboard.Controllers
 {
@@ -23,11 +24,13 @@ namespace health_dashboard.Controllers
     public class DashboardController : Controller
     {
         private static IApiClient Client;
-        private static IConfiguration AppConfig;
+        private static IConfiguration Config;
+        private static IConfigurationSection AppConfig;
 
         public DashboardController(IConfiguration config, IApiClient client )
         {
-            AppConfig = config.GetSection("Health_Dashboard");
+            Config = config;
+            AppConfig = Config.GetSection("Health_Dashboard");
             Client = client;
         }
 
@@ -38,7 +41,6 @@ namespace health_dashboard.Controllers
             /*
              * Within the context of this microservice, this should only require
              * deleting data à la the RemoveData() action.
-             *
              * Views should be reusable, just needs a parameter adding for the
              * user that the admin would like to remove the data for.
              *
@@ -51,9 +53,11 @@ namespace health_dashboard.Controllers
         // Currently doesn't care about the timeframe, in terms of a pass/fail or showing how long is left.
         public async Task<IActionResult> Goals()
         {
-            GoalsViewModel vm = new GoalsViewModel();
-            vm.ActivityTypes = await GetActivityTypes();
-            vm.Challenges = await GetChallenges();
+            GoalsViewModel vm = new GoalsViewModel
+            {
+                ActivityTypes = await GetActivityTypes(),
+                Challenges = await GetChallenges()
+            };
 
             if (Request.Method == "POST")
             {
@@ -100,7 +104,10 @@ namespace health_dashboard.Controllers
             vm.ActivityTypes = await GetActivityTypes();
 
             // This may want to be a different method, if only the last month of data is desired
-            List<HealthActivity> api_activities = await GetUserActivities();
+            DateTime today = DateTime.Today;
+            DateTime weekAgo = DateTime.Today.AddDays(-7);
+
+            List<HealthActivity> api_activities = await GetUserActivities(null, weekAgo.ToShortDateString(), today.ToShortDateString());
 
             Dictionary<string, List<HealthActivity>> activities_by_type = new Dictionary<string, List<HealthActivity>>();
             /*
@@ -114,7 +121,7 @@ namespace health_dashboard.Controllers
 
             foreach (var a in api_activities)
             {
-                DateTime startTime = DateTime.Parse(a.StartTimestamp);
+                DateTime startTime = DateTime.Parse(a.startTimestamp);
                 // Just date - not the time
                 if (!activities_by_type.ContainsKey(startTime.ToShortDateString()))
                 {
@@ -167,26 +174,96 @@ namespace health_dashboard.Controllers
             return Ok();
         }
 
-        public IActionResult Rankings()
+        public async Task<IActionResult> Rankings(int page = 1)
         {
+            RankingsViewModel vm = new RankingsViewModel();
+
+            List<HealthActivity> userActivities = new List<HealthActivity>();
+            List<HealthActivity> userActivitiesCombined = new List<HealthActivity>();
+            bool activityAlreadyAdded;
+            GroupWithMembers groupWithMembers = await GetGroupOfUser();
+            if (groupWithMembers != null)
+            {
+                for (int i = 0; i < groupWithMembers.Members.Length; i++)
+                {
+                    userActivities = await GetUserActivities(groupWithMembers.Members[i].UserId);
+                    foreach (HealthActivity ha in userActivities)
+                    {
+                        activityAlreadyAdded = false;
+                        foreach (HealthActivity hac in userActivitiesCombined)
+                        {
+                            if (hac.activityTypeId.Equals(ha.activityTypeId) && hac.userId.Equals(ha.userId))
+                            {
+                                // do any other checks (probably to do with activity dates) here
+                                hac.caloriesBurnt += ha.caloriesBurnt;
+                                hac.metresElevationGained += ha.metresElevationGained;
+                                hac.metresTravelled += ha.metresTravelled;
+                                hac.stepsTaken += ha.stepsTaken;
+                                activityAlreadyAdded = true;
+                                break;
+                            }
+                        }
+                        if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
+                    }
+                }
+                userActivitiesCombined = userActivitiesCombined.OrderByDescending(h => h.caloriesBurnt).ToList();
+                List<string> userList = new List<string>();
+                foreach (HealthActivity ha in userActivitiesCombined)
+                {
+                    userList.Add(ha.userId);
+                }
+
+                string GetUsersPath = AppConfig.GetValue<string>("GatekeeperUrl") + "api/Users/Batch";
+                var response = await Client.PostAsync(GetUsersPath, userList.Distinct());
+                JArray jsonArrayOfUsers = JArray.Parse(await response.Content.ReadAsStringAsync());
+                foreach (HealthActivity ha in userActivitiesCombined)
+                {
+                    foreach (JObject j in jsonArrayOfUsers)
+                    {
+                        if (ha.userId == j.GetValue("id").ToString())
+                        {
+                            ha.userId = j.GetValue("email").ToString();
+                        }
+                    }
+                }
+                
+                vm.ActivityTypes = await GetActivityTypes();
+                vm.Activities = userActivitiesCombined.ToPagedList(page, 20);
+                vm.RenderTables = true;
+            } else
+            {
+                vm.Message = "You aren't currently a member of a group. Would you like to <a href=" + AppConfig.GetValue<string>("UserGroupsUrl") + ">join one?</a>";
+                vm.RenderTables = false;
+            }
+
+            
             // TODO Implement rankings using data from the user-groups and health-data-repository microservices
             /*
              * Should just require obtaining the user-group data, getting the
              * activity data for each user within the group, filtering the data
              * by the desired activity type, and sorting the data by total for
-             the relevant metric.
+             * the relevant metric.
              */
-            return View();
+
+            // controller: 
+            // 1. get the group the current user is in
+            // 2. get every member of the group
+            // 3. get activity data for each group member
+            // view: 
+            // 4. get desired activity from data
+            // 5. get total of data per person
+            // 6. rank group members by total
+            return View(vm);
         }
 
         public async Task<IActionResult> RemoveData(int page = 1)
         {
-            RemoveDataViewModel vm = new RemoveDataViewModel();
-
-            var allActivities = await GetUserActivities();
-            vm.Activities = allActivities.ToPagedList(page, 20);
-
-            vm.ActivityTypes = await GetActivityTypes();
+            var allActivities = await GetUserActivities(null);
+            RemoveDataViewModel vm = new RemoveDataViewModel
+            {
+                Activities = allActivities.ToPagedList(page, 20),
+                ActivityTypes = await GetActivityTypes()
+            };
 
             return View(vm);
         }
@@ -239,12 +316,23 @@ namespace health_dashboard.Controllers
             return r;
         }
 
-        private async Task<List<HealthActivity>> GetUserActivities()
+        private async Task<List<HealthActivity>> GetUserActivities(string userId, string from = null, string to = null)
         {
+            if (from == null ^ to == null)
+            {
+                throw new ArgumentException();
+            }
+
             List<HealthActivity> activities;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                var response = await Client.GetAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/find/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+                string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/ByUser/" + (String.IsNullOrEmpty(userId) ? User.Claims.FirstOrDefault(c => c.Type == "sub").Value : userId);
+                if ( from != null)
+                {
+                    path += "?from=" + from + "&to=" + to;
+                }
+
+                var response = await Client.GetAsync(path);
                 activities = await response.Content.ReadAsAsync<List<HealthActivity>>();
             }
             else
@@ -260,7 +348,8 @@ namespace health_dashboard.Controllers
             List<ActivityType> activity_types;
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                var response = await Client.GetAsync(AppConfig.GetValue<string>(AppConfig.GetValue<string>("HealthDataRepositoryUrl")) + "activity-types");
+                string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/ActivityTypes";
+                var response = await Client.GetAsync(path);
                 activity_types = await response.Content.ReadAsAsync<List<ActivityType>>();
             }
             else
@@ -288,22 +377,74 @@ namespace health_dashboard.Controllers
         }
 
         // TODO GetUserGroups() method
+        private async Task<List<Group>> GetUserGroups()
+        {
+            List<Group> groups;
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
+            {
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/");
+                groups = await response.Content.ReadAsAsync<List<Group>>();
+            }
+            else
+            {
+                var groups_json = System.IO.File.ReadAllText("./group-find-all.json");
+                groups = (List<Group>)JsonConvert.DeserializeObject(groups_json, typeof(List<Group>));
+            }
+            return groups;
+        }
+
+        // TODO GetUserGroupWithMembers() method
+        private async Task<GroupWithMembers> GetUserGroupWithMembers(int groupId)
+        {
+            GroupWithMembers group;
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
+            {
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/" + groupId);
+                group = await response.Content.ReadAsAsync<GroupWithMembers>();
+            }
+            else
+            {
+                var group_json = System.IO.File.ReadAllText("./group-find-1-detailed.json");
+                group = (GroupWithMembers)JsonConvert.DeserializeObject(group_json, typeof(GroupWithMembers));
+            }
+            return group;
+        }
+
+        // TODO GetUserGroups() method
+        private async Task<GroupWithMembers> GetGroupOfUser()
+        {
+            GroupWithMembers group;
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
+            {
+                var path = AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/ForUser/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+                var response = await Client.GetAsync(path);
+                group = await response.Content.ReadAsAsync<GroupWithMembers>();
+            }
+            else
+            {
+                var group_json = System.IO.File.ReadAllText("./group-find-1-detailed.json");
+                group = (GroupWithMembers)JsonConvert.DeserializeObject(group_json, typeof(GroupWithMembers));
+            }
+
+            return group;
+        }
 
         private async Task<HttpResponseMessage> PostFormActivity()
         {
             // Parsing null string problems
             HealthActivity activity = new HealthActivity
             {
-                UserId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
-                StartTimestamp = Request.Form["start-time"],
-                EndTimestamp = Request.Form["end-time"],
-                Source = -1,
-                ActivityType = StringValues.IsNullOrEmpty(Request.Form["activity-type"]) ? 0 : int.Parse(Request.Form["activity-type"]),
-                CaloriesBurnt = StringValues.IsNullOrEmpty(Request.Form["calories-burnt"]) ? 0 : int.Parse(Request.Form["calories-burnt"]),
-                AverageHeartRate = StringValues.IsNullOrEmpty(Request.Form["average-heart-rate"]) ? 0 : int.Parse(Request.Form["average-heart-rate"]),
-                StepsTaken = StringValues.IsNullOrEmpty(Request.Form["steps-taken"]) ? 0 : int.Parse(Request.Form["steps-taken"]),
-                MetresTravelled = StringValues.IsNullOrEmpty(Request.Form["metres-travelled"]) ? 0 : int.Parse(Request.Form["metres-travelled"]),
-                MetresElevationGained = StringValues.IsNullOrEmpty(Request.Form["metres-elevation-gained"]) ? 0 : int.Parse(Request.Form["metres-elevation-gained"])
+                userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
+                startTimestamp = Request.Form["start-time"],
+                endTimestamp = Request.Form["end-time"],
+                source = Request.Form["source"],
+                activityType = Request.Form["source"],
+                activityTypeId = StringValues.IsNullOrEmpty(Request.Form["activity-type"]) ? 0 : int.Parse(Request.Form["activity-type-id"]),
+                caloriesBurnt = StringValues.IsNullOrEmpty(Request.Form["calories-burnt"]) ? 0 : int.Parse(Request.Form["calories-burnt"]),
+                averageHeartRate = StringValues.IsNullOrEmpty(Request.Form["average-heart-rate"]) ? 0 : int.Parse(Request.Form["average-heart-rate"]),
+                stepsTaken = StringValues.IsNullOrEmpty(Request.Form["steps-taken"]) ? 0 : int.Parse(Request.Form["steps-taken"]),
+                metresTravelled = StringValues.IsNullOrEmpty(Request.Form["metres-travelled"]) ? 0 : int.Parse(Request.Form["metres-travelled"]),
+                metresElevationGained = StringValues.IsNullOrEmpty(Request.Form["metres-elevation-gained"]) ? 0 : int.Parse(Request.Form["metres-elevation-gained"])
             };
 
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
@@ -323,19 +464,20 @@ namespace health_dashboard.Controllers
         {
             Challenge challenge = new Challenge
             {
-                userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
                 startDateTime = Request.Form["start-time"],
                 endDateTime = Request.Form["end-time"],
                 goal = int.Parse(Request.Form["target"]),
-                activity = new ChallengeActivity {
+                activity = new ChallengeActivity
+                {
                     activityId = int.Parse(Request.Form["activity-type"]),
                     activityName = Request.Form["goal-metric"]
                 }
             };
-
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
+            string path = AppConfig.GetValue<string>("ChallengeUrl");
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
             {
-                return await Client.PostAsync<Challenge>(AppConfig.GetValue<string>("ChallengesUrl") + "challenge", challenge);
+                path += "Userchallenge";
+                return await Client.PostAsync<Challenge>(path, challenge);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -370,5 +512,13 @@ namespace health_dashboard.Controllers
     {
         public IPagedList<HealthActivity> Activities { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
+    }
+
+    public class RankingsViewModel
+    {
+        public IPagedList<HealthActivity> Activities { get; set; }
+        public List<ActivityType> ActivityTypes { get; set; }
+        public string Message { get; set; }
+        public bool RenderTables { get; set; }
     }
 }

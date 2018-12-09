@@ -114,8 +114,8 @@
                         {
                             <tr>
                                 <th>@ch.activity.activityName</th>
-                                <th>@(Math.Floor((double)((int)ch.goal * (int)ch.percentComplete / 100))) @ch.activity.goalMetric</th>
-                                <th>@ch.goal @ch.activity.goalMetric</th>
+                                <th>@(Math.Floor((double)((int)ch.goal * (int)ch.percentComplete / 100))) @ch.goalMetric</th>
+                                <th>@ch.goal @ch.goalMetric</th>
                                 <th>@(DateTime.Parse((string)ch.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)ch.endDateTime, CultureInfo.InvariantCulture).ToString())</th>
                                 <td><div class="goal-delete-message" data-id="@ch.challengeId"></div><a href="#" class="goal-delete-ajax" data-id="@ch.challengeId">Delete</a></td>
                             </tr>
