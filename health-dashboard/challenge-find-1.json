@@ -5,13 +5,13 @@
     "endDateTime": "2018/11/20T10:00:00",
     "activity": {
       "activityId": 0,
-      "activityName": "Swimming",
-      "goalMetric": "Seconds"
+      "activityName": "Swimming"
     },
     "goal": 50,
     "percentComplete": 60,
     "repeat": true,
-    "userId": 0
+    "userId": 0,
+    "goalMetric": "Seconds"
   },
   {
     "challengeId": 1,
@@ -19,12 +19,12 @@
     "endDateTime": "2018/07/20T10:00:00",
     "activity": {
       "activityId": 1,
-      "activityName": "Steps",
-      "goalMetric": "Steps"
+      "activityName": "Steps"
     },
     "goal": 10000,
     "percentComplete": 30,
     "repeat": true,
-    "userId": 0
+    "userId": 0,
+    "goalMetric": "Steps"
   }
 ]

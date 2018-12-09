@@ -2,20 +2,19 @@
 {
     public class Group
     {
-        public int GroupId { get; set; }
-        public string GroupName { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 
     public class GroupWithMembers
     {
-        public int GroupId { get; set; }
-        public string GroupName { get; set; }
-        public GroupMember[] GroupMembers { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public GroupMember[] Members { get; set; }
     }
 
     public class GroupMember
     {
-        public int UserId { get; set; }
+        public string UserId { get; set; }
     }
 }
-
