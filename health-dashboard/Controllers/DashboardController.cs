@@ -107,7 +107,7 @@ namespace health_dashboard.Controllers
             DateTime today = DateTime.Today;
             DateTime weekAgo = DateTime.Today.AddDays(-7);
 
-            List<HealthActivity> api_activities = await GetUserActivities(null, weekAgo.ToShortDateString(), today.ToShortDateString());
+            List<HealthActivity> api_activities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, weekAgo.ToShortDateString(), today.ToShortDateString());
 
             Dictionary<string, List<HealthActivity>> activities_by_type = new Dictionary<string, List<HealthActivity>>();
             /*
@@ -258,12 +258,19 @@ namespace health_dashboard.Controllers
 
         public async Task<IActionResult> RemoveData(int page = 1)
         {
-            var allActivities = await GetUserActivities(null);
-            RemoveDataViewModel vm = new RemoveDataViewModel
+            RemoveDataViewModel vm = new RemoveDataViewModel();
+            List<HealthActivity> allActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+
+            if ( allActivities.Count > 0 )
             {
-                Activities = allActivities.ToPagedList(page, 20),
-                ActivityTypes = await GetActivityTypes()
-            };
+                vm.Activities = allActivities.ToPagedList(page, 20);
+                vm.ActivityTypes = await GetActivityTypes();
+                vm.RenderTable = true;
+            } else
+            {
+                vm.Message = "You don't have any activities recorded. Would you like to <a href='" + Url.Action("Input", "Dashboard") + "'>record one?</a>";
+                vm.RenderTable = false;
+            }
 
             return View(vm);
         }
@@ -271,7 +278,6 @@ namespace health_dashboard.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveDataAjax(int id)
         {
-
             var response = await DeleteActivity(id);
 
             if ((int)response.StatusCode != 201)
@@ -512,6 +518,8 @@ namespace health_dashboard.Controllers
     {
         public IPagedList<HealthActivity> Activities { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
+        public string Message { get; set; }
+        public bool RenderTable { get; set; }
     }
 
     public class RankingsViewModel

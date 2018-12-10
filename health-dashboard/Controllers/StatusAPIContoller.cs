@@ -4,7 +4,7 @@ namespace health_dashboard.Controllers
 {
     [Route("/api/[controller]")]
     [ApiController]
-    public class StatusAPIController : ControllerBase
+    public class StatusController : ControllerBase
     {
         // GET: /Status
         [HttpGet]

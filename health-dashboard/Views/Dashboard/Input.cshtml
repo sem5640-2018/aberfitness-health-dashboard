@@ -1,99 +1,75 @@
 ﻿<div class="row">
-    <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel">
-            <div class="x_title">
-                <h2>Record Activity</h2>
-                <br/>
-                <div class="clearfix"></div>
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="box-title">Record Activity</h1>
             </div>
-            <div class="x_content">
+            <div class="card-body">
                 @if (Model.Message != null)
                 {
-                    <div>
-                        @Model.Message
-                    </div>
+                    <div>@Html.Raw(Model.Message)</div>
                 }
-                <br/>
-                <form class="form-horizontal form-label-left" method="post" action="#">
+                <form method="post" action="#">
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="start-time">
+                        <label class="form-control-label" for="start-time">
                             Start Time
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="datetime-local" id="start-time" name="start-time" class="form-control col-md-7 col-xs-12" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" max="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
-                        </div>
+                        <input type="datetime-local" id="start-time" name="start-time" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" max="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="end-time">
+                        <label class="form-control-label" for="end-time">
                             End Time
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="datetime-local" id="end-time" name="end-time" class="form-control col-md-7 col-xs-12" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" max="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
-                        </div>
+                        <input type="datetime-local" id="end-time" name="end-time" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" max="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="activity-type">
+                        <label class="form-control-label" for="activity-type">
                             Activity Type<span class="required">*</span>
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <select id="activity-type" name="activity-type" class="form-control col-md-7 col-xs-12" required="required">
-                                <option value=""></option>
-                                @foreach (var at in Model.ActivityTypes)
-                                {
-                                    <option value="@at.Id">@at.Name</option>
-                                }
-                            </select>
-                        </div>
+                        <select id="activity-type" name="activity-type" class="form-control" required="required">
+                            <option value=""></option>
+                            @foreach (var at in Model.ActivityTypes)
+                            {
+                                <option value="@at.Id">@at.Name</option>
+                            }
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="calories-burnt">
+                        <label class="form-control-label" for="calories-burnt">
                             Calories Burnt
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="number" id="calories-burnt" name="calories-burnt" class="form-control col-md-7 col-xs-12" min="0" step="1">
-                        </div>
+                        <input type="number" id="calories-burnt" name="calories-burnt" class="form-control" min="0" step="1">
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="average-heart-rate">
+                        <label class="form-control-label" for="average-heart-rate">
                             Average Heart Rate
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="number" id="average-heart-rate" name="average-heart-rate" class="form-control col-md-7 col-xs-12" min="0" step="1">
-                        </div>
+                        <input type="number" id="average-heart-rate" name="average-heart-rate" class="form-control" min="0" step="1">
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="steps-taken">
+                        <label class="form-control-label" for="steps-taken">
                             Steps Taken
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="number" id="steps-taken" name="steps-taken" class="form-control col-md-7 col-xs-12" min="0" step="1">
-                        </div>
+                        <input type="number" id="steps-taken" name="steps-taken" class="form-control" min="0" step="1">
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="metres-travelled">
+                        <label class="form-control-label" for="metres-travelled">
                             Metres Travelled
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="number" id="metres-travelled" name="metres-travelled" class="form-control col-md-7 col-xs-12" min="0" step="1">
-                        </div>
+                        <input type="number" id="metres-travelled" name="metres-travelled" class="form-control" min="0" step="1">
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="metres-elevation-gained">
+                        <label class="form-control-label" for="metres-elevation-gained">
                             Elevation Gained (metres)
                         </label>
-                        <div class="col-md-6 col-sm-6 col-xs-12">
-                            <input type="number" id="metres-elevation-gained" name="metres-elevation-gained" class="form-control col-md-7 col-xs-12" min="0" step="1">
-                        </div>
+                        <input type="number" id="metres-elevation-gained" name="metres-elevation-gained" class="form-control" min="0" step="1">
                     </div>
 
-                    <div class="ln_solid"></div>
                     <div class="form-group">
-                        <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-5">
-                            <button type="submit" class="btn btn-success">Submit</button>
-                        </div>
+                        <button type="submit" class="btn btn-success">Submit</button>
                     </div>
                 </form>
-             </div>
+            </div>
         </div>
     </div>
 </div>
