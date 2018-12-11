@@ -2,16 +2,17 @@
 {
     public class Challenge
     {
-        public int challengeId { get; set; }
+        public int? challengeId { get; set; }
         public string startDateTime { get; set; }
         public string endDateTime { get; set; }
+        public int goal { get; set; }
+        public GoalMetric GoalMetric { get; set; }
+        public int GoalMetricId { get; set; }
         public int activityId { get; set; }
         public ChallengeActivity activity { get; set; }
-        public int percentComplete { get; set; }
-        public bool isGroupChallenge { get; set; }
-        public int goal { get; set; }
         public bool repeat { get; set; }
-        public string goalMetric { get; set; }
+        public bool isGroupChallenge { get; set; }
+        public int? groupId { get; set; }
     }
 
     public class ChallengeActivity
@@ -22,10 +23,17 @@
 
     public class UserChallenge
     {
-        public int userChallengeId { get; set; }
+        public int? userChallengeId { get; set; }
         public string userId { get; set; }
         public Challenge challenge { get; set; }
-        public int percentageComplete { get; set; }
+        public int? percentageComplete { get; set; }
+    }
+
+    public class GoalMetric
+    {
+        public int? GoalMetricId { get; set; }
+        public string GoalMetricDisplay { get; set; }
+        public string GoalMetricDbName { get; set; }
     }
 }
 

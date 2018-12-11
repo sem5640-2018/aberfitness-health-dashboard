@@ -61,13 +61,7 @@ namespace health_dashboard.Controllers
 
             if (Request.Method == "POST")
             {
-                if (StringValues.IsNullOrEmpty(Request.Form["goal-metric"]))
-                {
-                    vm.Message = "Please choose a goal metric.";
-                    return View(vm);
-                }
-
-                var response = await PostFormChallenge();
+                var response = await PostFormGoal();
 
                 // Add success / failure message
                 if ((int)response.StatusCode == 201)
@@ -76,7 +70,8 @@ namespace health_dashboard.Controllers
                 }
                 else
                 {
-                    vm.Message = "Goal save failed. Please contact a coordinator or an administrator.";
+                    //vm.Message = "Goal save failed. Please contact a coordinator or an administrator.";
+                    vm.Message = await response.Content.ReadAsStringAsync();
                 }
             }
 
@@ -495,26 +490,23 @@ namespace health_dashboard.Controllers
             return r;
         }
         
-        private async Task<HttpResponseMessage> PostFormChallenge()
+        private async Task<HttpResponseMessage> PostFormGoal()
         {
-            UserChallenge uc = new UserChallenge
-            {
+            var uc = new {
                 userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
-                challenge = new Challenge
-                {
-                    startDateTime = Request.Form["start-time"],
-                    endDateTime = Request.Form["end-time"],
+                challenge = new {
+                    startDateTime = Request.Form["start-time"][0], // Please, for the love of god, refactor this
+                    endDateTime = Request.Form["end-time"][0], // Please, for the love of god, refactor this
                     goal = int.Parse(Request.Form["target"]),
-                    activity = new ChallengeActivity
-                    {
-                        activityId = int.Parse(Request.Form["activity-type"]),
-                        activityName = Request.Form["goal-metric"]
-                    }
+                    GoalMetricId = int.Parse(Request.Form["goal-metric"]),
+                    activityId = int.Parse(Request.Form["activity-type"]),
+                    isGroupChallenge = false,
                 },
             };
+            var foo = JsonConvert.SerializeObject(uc);
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
             {
-                return await Client.PostAsync<UserChallenge>(AppConfig.GetValue<string>("ChallengeUrl") + "api/challenge", uc);
+                return await Client.PostAsync<object>(AppConfig.GetValue<string>("ChallengeUrl") + "api/challenges", uc);
             }
 
             HttpResponseMessage r = new HttpResponseMessage

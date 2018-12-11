@@ -28,29 +28,31 @@
                     </div>
                     <div class="form-group">
                         <label class="form-control-label" for="target">
-                            Target
+                            Target<span class="required">*</span>
                         </label>
                         <input type="number" id="target" name="target" class="form-control" value="0">
                     </div>
                     <div class="form-group">
-                        <label class="form-control-label">Goal Metric</label>
-                        <select id="activity-type" name="activity-type" class="form-control" required="required">
+                        <label class="form-control-label">
+                            Goal Metric<span class="required">*</span>
+                        </label>
+                        <select id="goal-metric" name="goal-metric" class="form-control" required="required">
                             <option value="" label="Choose a Goal Metric..."></option>
-                            <option value="Calories">Calories Burnt</option>
-                            <option value="StepsTaken">Steps</option>
-                            <option value="MetresTravelled">Metres Travelled</option>
-                            <option value="MetresElevationGained">Metres Elevation Gained</option>
+                            <option value="1">Calories Burnt</option>
+                            <option value="2">Steps</option>
+                            <option value="3">Metres Travelled</option>
+                            <option value="4">Metres Elevation Gained</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="form-control-label" for="start-time">
-                            Start Time
+                            Start Time<span class="required">*</span>
                         </label>
                         <input type="datetime-local" id="start-time" name="start-time" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
                     </div>
                     <div class="form-group">
                         <label class="form-control-label" for="end-time">
-                            End Time
+                            End Time<span class="required">*</span>
                         </label>
                         <input type="datetime-local" id="end-time" name="end-time" class="form-control" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
                     </div>
@@ -88,7 +90,7 @@
                             <tr>
                                 <td>@g.challenge.activity.activityName</td>
                                 <td>@(Math.Floor((double)((int)g.challenge.goal * (int)g.percentageComplete / 100))) @g.challenge.goalMetric</td>
-                                <td>@g.challenge.goal @g.challenge.goalMetric</td>
+                                <td>@g.challenge.goal @g.challenge.GoalMetric.GoalMetricDisplay</td>
                                 <td>@(DateTime.Parse((string)g.challenge.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)g.challenge.endDateTime, CultureInfo.InvariantCulture).ToString())</td>
                                 <td><div class="goal-delete-message" data-id="@g.challenge.challengeId"></div><a href="#" class="goal-delete-ajax" data-id="@g.challenge.challengeId">Delete</a></td>
                             </tr>
