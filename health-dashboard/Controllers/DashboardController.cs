@@ -187,7 +187,6 @@ namespace health_dashboard.Controllers
                 "caloriesBurnt",
                 "stepsTaken",
                 "metresTravelled",
-                "metresElevationGained",
             };
             string[] goalMetricStringArray = goalMetricStringsList.ToArray();
 
@@ -196,8 +195,10 @@ namespace health_dashboard.Controllers
             List<ActivityType> activityTypes = await GetActivityTypes();
             // activityOccurences will store how many instances of a certain type of activity are present in the database
             Dictionary<int, int> activityOccurences = new Dictionary<int, int>();
+            Dictionary<int, string> activityTypeDict = new Dictionary<int, string>();
             foreach (ActivityType type in activityTypes)
             {
+                activityTypeDict.Add(type.Id, type.Name);
                 activityOccurences.Add(type.Id, 0);
             }
 
@@ -215,12 +216,13 @@ namespace health_dashboard.Controllers
                             {
                                 // do any other checks (probably to do with activity dates) here
                                 hac.caloriesBurnt += ha.caloriesBurnt;
-                                hac.metresElevationGained += ha.metresElevationGained;
                                 hac.metresTravelled += ha.metresTravelled;
                                 hac.stepsTaken += ha.stepsTaken;
                                 activityAlreadyAdded = true;
+                                hac.metresElevationGained += ha.metresElevationGained;
                                 break;
                             }
+                            hac.metresElevationGained = Math.Max(0, hac.metresElevationGained);
                         }
                         if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
                         activityOccurences[ha.activityTypeId]++;
@@ -231,7 +233,7 @@ namespace health_dashboard.Controllers
                     if (entry.Value == 0)
                     {
                         // remove any activity types which aren't featured in the activities list before sending to rankings model
-                        activityTypes.Remove(activityTypes.First(type => type.Id == entry.Key));
+                        activityTypeDict.Remove(entry.Key);
                     }
                 }
                 userActivitiesCombined = userActivitiesCombined.OrderByDescending(h => h.caloriesBurnt).ToList();
@@ -255,7 +257,7 @@ namespace health_dashboard.Controllers
                     }
                 }
 
-                vm.ActivityTypes = activityTypes;
+                vm.ActivityTypeDict = activityTypeDict;
                 vm.Activities = userActivitiesCombined.ToPagedList(page, 20);
                 vm.RenderTables = true;
                 vm.GoalMetrics = goalMetricStringArray;
@@ -265,20 +267,12 @@ namespace health_dashboard.Controllers
                 vm.RenderTables = false;
             }
 
-            // TODO Implement rankings using data from the user-groups and health-data-repository microservices
-            /*
-             * Should just require obtaining the user-group data, getting the
-             * activity data for each user within the group, filtering the data
-             * by the desired activity type, and sorting the data by total for
-             * the relevant metric.
-             */
-
             // controller: 
             // 1. get the group the current user is in
             // 2. get every member of the group
-            // 3. get activity data for each group member
+            // 3. get activity and goal metric data for each group member
             // view: 
-            // 4. get desired activity from data
+            // 4. get desired activity and goal metric from data
             // 5. get total of data per person
             // 6. rank group members by total
             return View(vm);
@@ -552,7 +546,7 @@ namespace health_dashboard.Controllers
     public class RankingsViewModel
     {
         public IPagedList<HealthActivity> Activities { get; set; }
-        public List<ActivityType> ActivityTypes { get; set; }
+        public Dictionary<int, string> ActivityTypeDict { get; set; }
         public string[] GoalMetrics { get; set; }
         public string Message { get; set; }
         public bool RenderTables { get; set; }

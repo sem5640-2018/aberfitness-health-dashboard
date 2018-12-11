@@ -14,15 +14,15 @@
             @if (Model.RenderTables)
             {
                 <div class="card-body">
-                    <select asp-items="@(new SelectList(Model.ActivityTypes, "Id", "Name"))" class="form-control" id="activityTypeDDL" onchange="updateActivityAndMetric()">Activity Type</select>
+                    <select asp-items="@(new SelectList(Model.ActivityTypeDict, "Key", "Value"))" class="form-control" id="activityTypeDDL" onchange="updateActivityAndMetric()">Activity Type</select>
                     <select asp-items="@(new SelectList(Model.GoalMetrics))" id="metricTypeDDL" class="form-control" onchange="updateActivityAndMetric()">Activity Type</select>
                     @{ string activityClass; string goalMetricClass; string activityMetricClass; }
                     @for (int gm = 0; gm < Model.GoalMetrics.Length; gm++)
                     {
-                        @foreach (ActivityType at in Model.ActivityTypes)
+                        @foreach (KeyValuePair<int, string> at in Model.ActivityTypeDict)
                         {
                             var i = 0; var activityTypeId = 0;
-                            activityClass = "activity-" + @at.Id; goalMetricClass = "metric-" + Model.GoalMetrics[gm]; activityMetricClass = activityClass + "-" + goalMetricClass;
+                            activityClass = "activity-" + @at.Key; goalMetricClass = "metric-" + Model.GoalMetrics[gm]; activityMetricClass = activityClass + "-" + goalMetricClass;
                             <table id="@activityMetricClass" class="@activityClass @goalMetricClass table table-striped table-bordered">
                                 <thead>
                                     <tr>
@@ -35,7 +35,7 @@
 
                                 @foreach (HealthActivity ha in Model.Activities)
                                 {
-                                    if (at.Id.Equals(ha.activityTypeId))
+                                    if (at.Key.Equals(ha.activityTypeId))
                                     {
                                         <tbody>
                                             @{i++; activityTypeId = ha.activityTypeId - 1;}
@@ -44,7 +44,7 @@
                                                 <td>@ha.userId</td>
                                                 @{ var metric = typeof(HealthActivity).GetProperty(Model.GoalMetrics[gm]).GetValue(ha); }
                                                 <td>@metric</td>
-                                                <td>@Model.ActivityTypes[activityTypeId].Name</td>
+                                                <td>@Model.ActivityTypeDict[ha.activityTypeId]</td>
                                             </tr>
                                         </tbody>
                                     }
@@ -68,7 +68,7 @@
         }
         var selectedActivityId = document.getElementById("activityTypeDDL").selectedIndex + 1;
         var selectedMetricId = document.getElementById("metricTypeDDL").selectedIndex;
-        var activityCount = @Model.ActivityTypes.Count;
+        var activityCount = @Model.ActivityTypeDict.Count;
         var metricCount = @Model.GoalMetrics.Length;
         var goalMetricId = "metric-";
         var activityId = "activity-";
