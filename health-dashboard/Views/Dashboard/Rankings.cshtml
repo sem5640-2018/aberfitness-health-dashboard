@@ -5,19 +5,17 @@
 @using X.PagedList;
 
 <div class="row">
-    <div class="col-md-12 col-sm-12 col-xs-12">
-        <div class="x_panel tile">
-            <div class="x_title">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
                 <h2>Rankings</h2>
                 <div>@Model.Message</div>
-                <br />
-                <div class="clearfix"></div>
             </div>
             @if (Model.RenderTables)
             {
-                <select asp-items="@(new SelectList(Model.ActivityTypes, "Id", "Name"))" id="activityTypeDDL" onchange="updateActivityAndMetric()">Activity Type</select>
-                <select asp-items="@(new SelectList(Model.GoalMetrics))" id="metricTypeDDL" onchange="updateActivityAndMetric()">Activity Type</select>
-                <div class="x_content">
+                <div class="card-body">
+                    <select asp-items="@(new SelectList(Model.ActivityTypes, "Id", "Name"))" class="form-control" id="activityTypeDDL" onchange="updateActivityAndMetric()">Activity Type</select>
+                    <select asp-items="@(new SelectList(Model.GoalMetrics))" id="metricTypeDDL" class="form-control" onchange="updateActivityAndMetric()">Activity Type</select>
                     @{ string activityClass; string goalMetricClass; string activityMetricClass; }
                     @for (int gm = 0; gm < Model.GoalMetrics.Length; gm++)
                     {
