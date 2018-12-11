@@ -190,12 +190,11 @@ namespace health_dashboard.Controllers
             };
             string[] goalMetricStringArray = goalMetricStringsList.ToArray();
 
-            // FIX - CASE WHERE DATABASE EMPTY
-
             List<ActivityType> activityTypes = await GetActivityTypes();
             // activityOccurences will store how many instances of a certain type of activity are present in the database
             Dictionary<int, int> activityOccurences = new Dictionary<int, int>();
             Dictionary<int, string> activityTypeDict = new Dictionary<int, string>();
+            bool renderTables = true;
             foreach (ActivityType type in activityTypes)
             {
                 activityTypeDict.Add(type.Id, type.Name);
@@ -204,63 +203,78 @@ namespace health_dashboard.Controllers
 
             if (groupWithMembers != null)
             {
-                for (int i = 0; i < groupWithMembers.Members.Length; i++)
+                if (activityTypes.Count > 0)
                 {
-                    userActivities = await GetUserActivities(groupWithMembers.Members[i].UserId);
-                    foreach (HealthActivity ha in userActivities)
+                    for (int i = 0; i < groupWithMembers.Members.Length; i++)
                     {
-                        activityAlreadyAdded = false;
-                        foreach (HealthActivity hac in userActivitiesCombined)
+                        userActivities = await GetUserActivities(groupWithMembers.Members[i].UserId);
+                        if (userActivities.Count > 0)
                         {
-                            if (hac.activityTypeId.Equals(ha.activityTypeId) && hac.userId.Equals(ha.userId))
+                            foreach (HealthActivity ha in userActivities)
                             {
-                                // do any other checks (probably to do with activity dates) here
-                                hac.caloriesBurnt += ha.caloriesBurnt;
-                                hac.metresTravelled += ha.metresTravelled;
-                                hac.stepsTaken += ha.stepsTaken;
-                                activityAlreadyAdded = true;
-                                hac.metresElevationGained += ha.metresElevationGained;
-                                break;
+                                activityAlreadyAdded = false;
+                                foreach (HealthActivity hac in userActivitiesCombined)
+                                {
+                                    if (hac.activityTypeId.Equals(ha.activityTypeId) && hac.userId.Equals(ha.userId))
+                                    {
+                                        // do any other checks (probably to do with activity dates) here
+                                        hac.caloriesBurnt += ha.caloriesBurnt;
+                                        hac.metresTravelled += ha.metresTravelled;
+                                        hac.stepsTaken += ha.stepsTaken;
+                                        activityAlreadyAdded = true;
+                                        hac.metresElevationGained += ha.metresElevationGained;
+                                        break;
+                                    }
+                                    hac.metresElevationGained = Math.Max(0, hac.metresElevationGained);
+                                }
+                                if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
+                                activityOccurences[ha.activityTypeId]++;
                             }
-                            hac.metresElevationGained = Math.Max(0, hac.metresElevationGained);
                         }
-                        if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
-                        activityOccurences[ha.activityTypeId]++;
-                    }
-                }
-                foreach (KeyValuePair<int, int> entry in activityOccurences)
-                {
-                    if (entry.Value == 0)
-                    {
-                        // remove any activity types which aren't featured in the activities list before sending to rankings model
-                        activityTypeDict.Remove(entry.Key);
-                    }
-                }
-                userActivitiesCombined = userActivitiesCombined.OrderByDescending(h => h.caloriesBurnt).ToList();
-                List<string> userList = new List<string>();
-                foreach (HealthActivity ha in userActivitiesCombined)
-                {
-                    userList.Add(ha.userId);
-                }
-
-                string GetUsersPath = AppConfig.GetValue<string>("GatekeeperUrl") + "api/Users/Batch";
-                var response = await Client.PostAsync(GetUsersPath, userList.Distinct());
-                JArray jsonArrayOfUsers = JArray.Parse(await response.Content.ReadAsStringAsync());
-                foreach (HealthActivity ha in userActivitiesCombined)
-                {
-                    foreach (JObject j in jsonArrayOfUsers)
-                    {
-                        if (ha.userId == j.GetValue("id").ToString())
+                        else
                         {
-                            ha.userId = j.GetValue("email").ToString();
+                            vm.Message = "Nobody in your group currently has any activities, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some?</a>";
+                            renderTables = false;
                         }
                     }
-                }
+                    foreach (KeyValuePair<int, int> entry in activityOccurences)
+                    {
+                        if (entry.Value == 0)
+                        {
+                            // remove any activity types which aren't featured in the activities list before sending to rankings model
+                            activityTypeDict.Remove(entry.Key);
+                        }
+                    }
+                    userActivitiesCombined = userActivitiesCombined.OrderByDescending(h => h.caloriesBurnt).ToList();
+                    List<string> userList = new List<string>();
+                    foreach (HealthActivity ha in userActivitiesCombined)
+                    {
+                        userList.Add(ha.userId);
+                    }
 
-                vm.ActivityTypeDict = activityTypeDict;
-                vm.Activities = userActivitiesCombined.ToPagedList(page, 20);
-                vm.RenderTables = true;
-                vm.GoalMetrics = goalMetricStringArray;
+                    string GetUsersPath = AppConfig.GetValue<string>("GatekeeperUrl") + "api/Users/Batch";
+                    var response = await Client.PostAsync(GetUsersPath, userList.Distinct());
+                    JArray jsonArrayOfUsers = JArray.Parse(await response.Content.ReadAsStringAsync());
+                    foreach (HealthActivity ha in userActivitiesCombined)
+                    {
+                        foreach (JObject j in jsonArrayOfUsers)
+                        {
+                            if (ha.userId == j.GetValue("id").ToString())
+                            {
+                                ha.userId = j.GetValue("email").ToString();
+                            }
+                        }
+                    }
+
+                    vm.ActivityTypeDict = activityTypeDict;
+                    vm.Activities = userActivitiesCombined.ToPagedList(page, 20);
+                    vm.RenderTables = renderTables;
+                    vm.GoalMetrics = goalMetricStringArray;
+                } else
+                {
+                    vm.Message = "Nobody in your group currently has any activities, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some?</a>";
+                    vm.RenderTables = false;
+                }
             } else
             {
                 vm.Message = "You aren't currently a member of a group. Would you like to <a href=" + AppConfig.GetValue<string>("UserGroupsUrl") + ">join one?</a>";

@@ -9,13 +9,13 @@
         <div class="card">
             <div class="card-body">
                 <h2>Rankings</h2>
+                @if (!Model.RenderTables){<br />}
                 <div>@Model.Message</div>
             </div>
-            @if (Model.RenderTables)
-            {
+            @if (Model.RenderTables) {
                 <div class="card-body">
                     <select asp-items="@(new SelectList(Model.ActivityTypeDict, "Key", "Value"))" class="form-control" id="activityTypeDDL" onchange="updateActivityAndMetric()">Activity Type</select>
-                    <select asp-items="@(new SelectList(Model.GoalMetrics))" id="metricTypeDDL" class="form-control" onchange="updateActivityAndMetric()">Activity Type</select>
+                    <select asp-items="@(new SelectList(Model.GoalMetrics))" id="metricTypeDDL" class="form-control" onchange="updateActivityAndMetric()">Goal Metric</select>
                     @{ string activityClass; string goalMetricClass; string activityMetricClass; }
                     @for (int gm = 0; gm < Model.GoalMetrics.Length; gm++)
                     {
@@ -60,7 +60,6 @@
 </div>
 <script>
     function updateActivityAndMetric() {
-
         var goalMetricTypes = [];
         @foreach (var g in Model.GoalMetrics)
         {
