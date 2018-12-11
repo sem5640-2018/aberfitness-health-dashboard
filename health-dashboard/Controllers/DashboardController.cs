@@ -27,7 +27,7 @@ namespace health_dashboard.Controllers
         private static IConfiguration Config;
         private static IConfigurationSection AppConfig;
 
-        public DashboardController(IConfiguration config, IApiClient client )
+        public DashboardController(IConfiguration config, IApiClient client)
         {
             Config = config;
             AppConfig = Config.GetSection("Health_Dashboard");
@@ -182,6 +182,25 @@ namespace health_dashboard.Controllers
             List<HealthActivity> userActivitiesCombined = new List<HealthActivity>();
             bool activityAlreadyAdded;
             GroupWithMembers groupWithMembers = await GetGroupOfUser();
+            List<string> goalMetricStringsList = new List<string>
+            {
+                "caloriesBurnt",
+                "stepsTaken",
+                "metresTravelled",
+                "metresElevationGained",
+            };
+            string[] goalMetricStringArray = goalMetricStringsList.ToArray();
+
+            // FIX - CASE WHERE DATABASE EMPTY
+
+            List<ActivityType> activityTypes = await GetActivityTypes();
+            // activityOccurences will store how many instances of a certain type of activity are present in the database
+            Dictionary<int, int> activityOccurences = new Dictionary<int, int>();
+            foreach (ActivityType type in activityTypes)
+            {
+                activityOccurences.Add(type.Id, 0);
+            }
+
             if (groupWithMembers != null)
             {
                 for (int i = 0; i < groupWithMembers.Members.Length; i++)
@@ -204,6 +223,15 @@ namespace health_dashboard.Controllers
                             }
                         }
                         if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
+                        activityOccurences[ha.activityTypeId]++;
+                    }
+                }
+                foreach (KeyValuePair<int, int> entry in activityOccurences)
+                {
+                    if (entry.Value == 0)
+                    {
+                        // remove any activity types which aren't featured in the activities list before sending to rankings model
+                        activityTypes.Remove(activityTypes.First(type => type.Id == entry.Key));
                     }
                 }
                 userActivitiesCombined = userActivitiesCombined.OrderByDescending(h => h.caloriesBurnt).ToList();
@@ -226,17 +254,17 @@ namespace health_dashboard.Controllers
                         }
                     }
                 }
-                
-                vm.ActivityTypes = await GetActivityTypes();
+
+                vm.ActivityTypes = activityTypes;
                 vm.Activities = userActivitiesCombined.ToPagedList(page, 20);
                 vm.RenderTables = true;
+                vm.GoalMetrics = goalMetricStringArray;
             } else
             {
                 vm.Message = "You aren't currently a member of a group. Would you like to <a href=" + AppConfig.GetValue<string>("UserGroupsUrl") + ">join one?</a>";
                 vm.RenderTables = false;
             }
 
-            
             // TODO Implement rankings using data from the user-groups and health-data-repository microservices
             /*
              * Should just require obtaining the user-group data, getting the
@@ -444,7 +472,6 @@ namespace health_dashboard.Controllers
                 startTimestamp = Request.Form["start-time"],
                 endTimestamp = Request.Form["end-time"],
                 source = Request.Form["source"],
-                activityType = Request.Form["source"],
                 activityTypeId = StringValues.IsNullOrEmpty(Request.Form["activity-type"]) ? 0 : int.Parse(Request.Form["activity-type-id"]),
                 caloriesBurnt = StringValues.IsNullOrEmpty(Request.Form["calories-burnt"]) ? 0 : int.Parse(Request.Form["calories-burnt"]),
                 averageHeartRate = StringValues.IsNullOrEmpty(Request.Form["average-heart-rate"]) ? 0 : int.Parse(Request.Form["average-heart-rate"]),
@@ -526,6 +553,7 @@ namespace health_dashboard.Controllers
     {
         public IPagedList<HealthActivity> Activities { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
+        public string[] GoalMetrics { get; set; }
         public string Message { get; set; }
         public bool RenderTables { get; set; }
     }
