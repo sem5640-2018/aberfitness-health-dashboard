@@ -83,18 +83,18 @@
                 <div class="clearfix"></div>
             </div>
             <div class="card-body">
-                @foreach (var ch in Model.Challenges)
+                @foreach (var g in Model.Goals)
                 {
                     <div class="">
-                        <span>@ch.goal @ch.goalMetric of @ch.activity.activityName</span>
+                        <span>@g.challenge.goal @g.challenge.goalMetric of @g.challenge.activity.activityName</span>
                     </div>
                     <div class="progress">
-                        <div class="progress-bar bg-green" role="progressbar" aria-valuenow="@ch.percentComplete" aria-valuemin="0" aria-valuemax="100" style="width: @ch.percentComplete%;">
-                            <span class="sr-only">@ch.percentComplete% Complete</span>
+                        <div class="progress-bar bg-green" role="progressbar" aria-valuenow="@g.percentageComplete" aria-valuemin="0" aria-valuemax="100" style="width: @g.percentageComplete%;">
+                            <span class="sr-only">@g.percentageComplete% Complete</span>
                         </div>
                     </div>
                     <div>
-                        <span>@ch.percentComplete% Complete</span>
+                        <span>@g.percentageComplete% Complete</span>
                     </div>
                     <br />
                     <div class="clearfix"></div>

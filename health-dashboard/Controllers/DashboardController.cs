@@ -56,7 +56,7 @@ namespace health_dashboard.Controllers
             GoalsViewModel vm = new GoalsViewModel
             {
                 ActivityTypes = await GetActivityTypes(),
-                Challenges = await GetChallenges()
+                Goals = await GetPersonalGoals()
             };
 
             if (Request.Method == "POST")
@@ -133,7 +133,8 @@ namespace health_dashboard.Controllers
 
             vm.Activities = activities_by_type;
 
-            vm.Challenges = await GetChallenges();
+            vm.Challenges = await GetGroupChallenges();
+            vm.Goals = await GetPersonalGoals();
 
             // There isn't current a different result if no challenge/activity data is found.
             return View(vm);
@@ -310,9 +311,9 @@ namespace health_dashboard.Controllers
 
         private async Task<HttpResponseMessage> DeleteGoal(int id)
         {
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
             {
-                return await Client.DeleteAsync(AppConfig.GetValue<string>("ChallengesUrl") + "challenges/" + id);
+                return await Client.DeleteAsync(AppConfig.GetValue<string>("ChallengeUrl") + "challenges/" + id);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -366,20 +367,49 @@ namespace health_dashboard.Controllers
             return activity_types;
         }
 
-        private async Task<List<Challenge>> GetChallenges()
+        private async Task<List<UserChallenge>> GetGroupChallenges()
         {
-            List<Challenge> challenges;
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengesUrl")))
+            List<UserChallenge> challenges;
+            // Not worth fixing this - next job is to remove this code anyway
+            /*
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")) && !String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
             {
-                var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengesUrl") + "find/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
-                challenges = await response.Content.ReadAsAsync<List<Challenge>>();
+            */
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+            var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challenges/getGroup/" + userId);
+            challenges = await response.Content.ReadAsAsync<List<UserChallenge>>();
+            /*
             }
             else
             {
-                var challenges_json = System.IO.File.ReadAllText("./challenge-find-1.json");
-                challenges = (List<Challenge>)JsonConvert.DeserializeObject(challenges_json, typeof(List<Challenge>));
+                var challengesJson = System.IO.File.ReadAllText("./challenge-find-1.json");
+                challenges = (List<Challenge>)JsonConvert.DeserializeObject(challengesJson, typeof(List<Challenge>));
             }
+            */
             return challenges;
+        }
+
+        private async Task<List<UserChallenge>> GetPersonalGoals()
+        {
+            List<UserChallenge> goals;
+            // Not worth fixing this - next job is to remove this code anyway
+            /*
+            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
+            {
+            */
+                var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challenges/getPersonal/" + userId);
+                goals = await response.Content.ReadAsAsync<List<UserChallenge>>();
+            /*
+            }
+            
+            else
+            {
+                //var challengesJson = System.IO.File.ReadAllText("./challenge-find-1.json");
+                //challenges = (List<Challenge>)JsonConvert.DeserializeObject(challengesJson, typeof(List<Challenge>));
+            }
+            */
+            return goals;
         }
 
         // TODO GetUserGroups() method
@@ -464,26 +494,27 @@ namespace health_dashboard.Controllers
             };
             return r;
         }
-
-        /* Needs changing to JSON */
+        
         private async Task<HttpResponseMessage> PostFormChallenge()
         {
-            Challenge challenge = new Challenge
+            UserChallenge uc = new UserChallenge
             {
-                startDateTime = Request.Form["start-time"],
-                endDateTime = Request.Form["end-time"],
-                goal = int.Parse(Request.Form["target"]),
-                activity = new ChallengeActivity
+                userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
+                challenge = new Challenge
                 {
-                    activityId = int.Parse(Request.Form["activity-type"]),
-                    activityName = Request.Form["goal-metric"]
-                }
+                    startDateTime = Request.Form["start-time"],
+                    endDateTime = Request.Form["end-time"],
+                    goal = int.Parse(Request.Form["target"]),
+                    activity = new ChallengeActivity
+                    {
+                        activityId = int.Parse(Request.Form["activity-type"]),
+                        activityName = Request.Form["goal-metric"]
+                    }
+                },
             };
-            string path = AppConfig.GetValue<string>("ChallengeUrl");
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
             {
-                path += "Userchallenge";
-                return await Client.PostAsync<Challenge>(path, challenge);
+                return await Client.PostAsync<UserChallenge>(AppConfig.GetValue<string>("ChallengeUrl") + "api/challenge", uc);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -497,7 +528,7 @@ namespace health_dashboard.Controllers
     public class GoalsViewModel
     {
         public List<ActivityType> ActivityTypes { get; set; }
-        public List<Challenge> Challenges { get; set; }
+        public List<UserChallenge> Goals { get; set; }
         public string Message { get; set; }
     }
 
@@ -505,7 +536,8 @@ namespace health_dashboard.Controllers
     {
         public Dictionary<string, List<HealthActivity>> Activities { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
-        public List<Challenge> Challenges { get; set; }
+        public List<UserChallenge> Challenges { get; set; }
+        public List<UserChallenge> Goals { get; set; }
     }
 
     public class InputViewModel

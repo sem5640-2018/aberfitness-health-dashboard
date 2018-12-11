@@ -83,14 +83,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var ch in Model.Challenges)
+                        @foreach (var g in Model.Goals)
                         {
                             <tr>
-                                <td>@ch.activity.activityName</td>
-                                <td>@(Math.Floor((double)((int)ch.goal * (int)ch.percentComplete / 100))) @ch.goalMetric</td>
-                                <td>@ch.goal @ch.goalMetric</td>
-                                <td>@(DateTime.Parse((string)ch.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)ch.endDateTime, CultureInfo.InvariantCulture).ToString())</td>
-                                <td><div class="goal-delete-message" data-id="@ch.challengeId"></div><a href="#" class="goal-delete-ajax" data-id="@ch.challengeId">Delete</a></td>
+                                <td>@g.challenge.activity.activityName</td>
+                                <td>@(Math.Floor((double)((int)g.challenge.goal * (int)g.percentageComplete / 100))) @g.challenge.goalMetric</td>
+                                <td>@g.challenge.goal @g.challenge.goalMetric</td>
+                                <td>@(DateTime.Parse((string)g.challenge.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)g.challenge.endDateTime, CultureInfo.InvariantCulture).ToString())</td>
+                                <td><div class="goal-delete-message" data-id="@g.challenge.challengeId"></div><a href="#" class="goal-delete-ajax" data-id="@g.challenge.challengeId">Delete</a></td>
                             </tr>
                         }
                     </tbody>
