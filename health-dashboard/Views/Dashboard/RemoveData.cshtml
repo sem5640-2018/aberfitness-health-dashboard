@@ -41,17 +41,17 @@
                             @foreach (var a in Model.Activities)
                             {
                                 <tr>
-                                    <td>@ActivityTypeStrings[a.ActivityType]</td>
+                                    <td>@ActivityTypeStrings[a.activityTypeId]</td>
                                     <td>
-                                        @(DateTime.Parse((string)a.StartTimestamp, CultureInfo.InvariantCulture).ToString())<br />
-                                        @(DateTime.Parse((string)a.EndTimestamp, CultureInfo.InvariantCulture).ToString())
+                                        @(DateTime.Parse((string)a.startTimestamp, CultureInfo.InvariantCulture).ToString())<br />
+                                        @(DateTime.Parse((string)a.endTimestamp, CultureInfo.InvariantCulture).ToString())
                                     </td>
-                                    <td>@a.CaloriesBurnt</td>
-                                    <td>@a.AverageHeartRate</td>
-                                    <td>@a.StepsTaken</td>
-                                    <td>@a.MetresTravelled</td>
-                                    <td>@a.MetresElevationGained</td>
-                                    <td><div class="activity-delete-message" data-id="@a.Id"></div><a href="#" class="activity-delete-ajax" data-id="@a.Id">Delete</a></td>
+                                    <td>@a.caloriesBurnt</td>
+                                    <td>@a.averageHeartRate</td>
+                                    <td>@a.stepsTaken</td>
+                                    <td>@a.metresTravelled</td>
+                                    <td>@a.metresElevationGained</td>
+                                    <td><div class="activity-delete-message" data-id="@a.id"></div><a href="#" class="activity-delete-ajax" data-id="@a.id">Delete</a></td>
                                 </tr>
                             }
                         </tbody>
