@@ -335,7 +335,7 @@ namespace health_dashboard.Controllers
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
                 var path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/" + id;
-                return await Client.DeleteAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/" + id);
+                return await Client.DeleteAsync(path);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
