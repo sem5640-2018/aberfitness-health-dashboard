@@ -21,13 +21,13 @@ namespace health_dashboard.Controllers
 {
 
     [Authorize]
-    public class DashboardController : Controller
+    public class HomeController : Controller
     {
         private static IApiClient Client;
         private static IConfiguration Config;
         private static IConfigurationSection AppConfig;
 
-        public DashboardController(IConfiguration config, IApiClient client)
+        public HomeController(IConfiguration config, IApiClient client)
         {
             Config = config;
             AppConfig = Config.GetSection("Health_Dashboard");
@@ -303,7 +303,7 @@ namespace health_dashboard.Controllers
             }
             else
             {
-                vm.Message = "You don't have any activities recorded. Would you like to <a href='" + Url.Action("Input", "Dashboard") + "'>record one?</a>";
+                vm.Message = "You don't have any activities recorded. Would you like to <a href='" + Url.Action("Input", "Home") + "'>record one?</a>";
                 vm.RenderTable = false;
             }
 

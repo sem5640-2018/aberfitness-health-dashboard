@@ -173,7 +173,7 @@
 
                 jQuery.ajax({
                     type: 'POST',
-                    url: '@Url.Action("InputAjax", "Dashboard")',
+                    url: '@Url.Action("InputAjax", "Home")',
                     data: form.serialize(),
                     success: function (data, textStatus, jqXHR) {
                         jQuery('.activity-form-message').html("<p>Ajax Success</p>");

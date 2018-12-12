@@ -76,7 +76,7 @@
 
                     jQuery.ajax({
                         type: 'POST',
-                        url: '@Url.Action("RemoveDataAjax", "Dashboard")' + '/' + link.data("id"),
+                        url: '@Url.Action("RemoveDataAjax", "Home")' + '/' + link.data("id"),
                         success: function (data, textStatus, jqXHR) {
                             jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Activity deleted successfully.</p>");
                         },
