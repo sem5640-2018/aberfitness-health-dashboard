@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -27,7 +27,7 @@ namespace health_dashboard.Controllers
         private static IConfiguration Config;
         private static IConfigurationSection AppConfig;
 
-        public DashboardController(IConfiguration config, IApiClient client )
+        public DashboardController(IConfiguration config, IApiClient client)
         {
             Config = config;
             AppConfig = Config.GetSection("Health_Dashboard");
@@ -145,10 +145,11 @@ namespace health_dashboard.Controllers
                 var response = await PostFormActivity();
 
                 // Add success / failure message
-                if ((int) response.StatusCode == 201)
+                if ((int)response.StatusCode == 201)
                 {
                     vm.Message = "Success";
-                } else
+                }
+                else
                 {
                     vm.Message = "Activity save failed. Please contact a coordinator or an administrator.";
                 }
@@ -177,75 +178,113 @@ namespace health_dashboard.Controllers
             List<HealthActivity> userActivitiesCombined = new List<HealthActivity>();
             bool activityAlreadyAdded;
             GroupWithMembers groupWithMembers = await GetGroupOfUser();
+            List<string> goalMetricStringsList = new List<string>
+            {
+                "caloriesBurnt",
+                "stepsTaken",
+                "metresTravelled",
+            };
+            string[] goalMetricStringArray = goalMetricStringsList.ToArray();
+
+            List<ActivityType> activityTypes = await GetHealthDataActivityTypes();
+            // activityOccurences will store how many instances of a certain type of activity are present in the database
+            Dictionary<int, int> activityOccurences = new Dictionary<int, int>();
+            Dictionary<int, string> activityTypeDict = new Dictionary<int, string>();
+            bool renderTables = true;
+            foreach (ActivityType type in activityTypes)
+            {
+                activityTypeDict.Add(type.Id, type.Name);
+                activityOccurences.Add(type.Id, 0);
+            }
+
             if (groupWithMembers != null)
             {
-                for (int i = 0; i < groupWithMembers.Members.Length; i++)
+                if (activityTypes.Count > 0)
                 {
-                    userActivities = await GetUserActivities(groupWithMembers.Members[i].UserId);
-                    foreach (HealthActivity ha in userActivities)
+                    for (int i = 0; i < groupWithMembers.Members.Length; i++)
                     {
-                        activityAlreadyAdded = false;
-                        foreach (HealthActivity hac in userActivitiesCombined)
+                        userActivities = await GetUserActivities(groupWithMembers.Members[i].UserId);
+                        if (userActivities.Count > 0)
                         {
-                            if (hac.activityTypeId.Equals(ha.activityTypeId) && hac.userId.Equals(ha.userId))
+                            foreach (HealthActivity ha in userActivities)
                             {
-                                // do any other checks (probably to do with activity dates) here
-                                hac.caloriesBurnt += ha.caloriesBurnt;
-                                hac.metresElevationGained += ha.metresElevationGained;
-                                hac.metresTravelled += ha.metresTravelled;
-                                hac.stepsTaken += ha.stepsTaken;
-                                activityAlreadyAdded = true;
-                                break;
+                                activityAlreadyAdded = false;
+                                foreach (HealthActivity hac in userActivitiesCombined)
+                                {
+                                    if (hac.activityTypeId.Equals(ha.activityTypeId) && hac.userId.Equals(ha.userId))
+                                    {
+                                        // do any other checks (probably to do with activity dates) here
+                                        hac.caloriesBurnt += ha.caloriesBurnt;
+                                        hac.metresTravelled += ha.metresTravelled;
+                                        hac.stepsTaken += ha.stepsTaken;
+                                        activityAlreadyAdded = true;
+                                        hac.metresElevationGained += ha.metresElevationGained;
+                                        break;
+                                    }
+                                    hac.metresElevationGained = Math.Max(0, hac.metresElevationGained);
+                                }
+                                if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
+                                activityOccurences[ha.activityTypeId]++;
                             }
                         }
-                        if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
-                    }
-                }
-                userActivitiesCombined = userActivitiesCombined.OrderByDescending(h => h.caloriesBurnt).ToList();
-                List<string> userList = new List<string>();
-                foreach (HealthActivity ha in userActivitiesCombined)
-                {
-                    userList.Add(ha.userId);
-                }
-
-                string GetUsersPath = AppConfig.GetValue<string>("GatekeeperUrl") + "api/Users/Batch";
-                var response = await Client.PostAsync(GetUsersPath, userList.Distinct());
-                JArray jsonArrayOfUsers = JArray.Parse(await response.Content.ReadAsStringAsync());
-                foreach (HealthActivity ha in userActivitiesCombined)
-                {
-                    foreach (JObject j in jsonArrayOfUsers)
-                    {
-                        if (ha.userId == j.GetValue("id").ToString())
+                        else
                         {
-                            ha.userId = j.GetValue("email").ToString();
+                            vm.Message = "Nobody in your group currently has any activities, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some?</a>";
+                            renderTables = false;
                         }
                     }
+                    foreach (KeyValuePair<int, int> entry in activityOccurences)
+                    {
+                        if (entry.Value == 0)
+                        {
+                            // remove any activity types which aren't featured in the activities list before sending to rankings model
+                            activityTypeDict.Remove(entry.Key);
+                        }
+                    }
+                    userActivitiesCombined = userActivitiesCombined.OrderByDescending(h => h.caloriesBurnt).ToList();
+                    List<string> userList = new List<string>();
+                    foreach (HealthActivity ha in userActivitiesCombined)
+                    {
+                        userList.Add(ha.userId);
+                    }
+
+                    string GetUsersPath = AppConfig.GetValue<string>("GatekeeperUrl") + "api/Users/Batch";
+                    var response = await Client.PostAsync(GetUsersPath, userList.Distinct());
+                    JArray jsonArrayOfUsers = JArray.Parse(await response.Content.ReadAsStringAsync());
+                    foreach (HealthActivity ha in userActivitiesCombined)
+                    {
+                        foreach (JObject j in jsonArrayOfUsers)
+                        {
+                            if (ha.userId == j.GetValue("id").ToString())
+                            {
+                                ha.userId = j.GetValue("email").ToString();
+                            }
+                        }
+                    }
+
+                    vm.ActivityTypeDict = activityTypeDict;
+                    vm.Activities = userActivitiesCombined.ToPagedList(page, 20);
+                    vm.RenderTables = renderTables;
+                    vm.GoalMetrics = goalMetricStringArray;
                 }
-                
-                vm.ActivityTypes = await GetHealthDataActivityTypes();
-                vm.Activities = userActivitiesCombined.ToPagedList(page, 20);
-                vm.RenderTables = true;
-            } else
+                else
+                {
+                    vm.Message = "Nobody in your group currently has any activities, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some?</a>";
+                    vm.RenderTables = false;
+                }
+            }
+            else
             {
                 vm.Message = "You aren't currently a member of a group. Would you like to <a href=" + AppConfig.GetValue<string>("UserGroupsUrl") + ">join one?</a>";
                 vm.RenderTables = false;
             }
 
-            
-            // TODO Implement rankings using data from the user-groups and health-data-repository microservices
-            /*
-             * Should just require obtaining the user-group data, getting the
-             * activity data for each user within the group, filtering the data
-             * by the desired activity type, and sorting the data by total for
-             * the relevant metric.
-             */
-
             // controller: 
             // 1. get the group the current user is in
             // 2. get every member of the group
-            // 3. get activity data for each group member
+            // 3. get activity and goal metric data for each group member
             // view: 
-            // 4. get desired activity from data
+            // 4. get desired activity and goal metric from data
             // 5. get total of data per person
             // 6. rank group members by total
             return View(vm);
@@ -256,12 +295,13 @@ namespace health_dashboard.Controllers
             RemoveDataViewModel vm = new RemoveDataViewModel();
             List<HealthActivity> allActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
 
-            if ( allActivities.Count > 0 )
+            if (allActivities.Count > 0)
             {
                 vm.Activities = allActivities.ToPagedList(page, 20);
                 vm.ActivityTypes = await GetHealthDataActivityTypes();
                 vm.RenderTable = true;
-            } else
+            }
+            else
             {
                 vm.Message = "You don't have any activities recorded. Would you like to <a href='" + Url.Action("Input", "Dashboard") + "'>record one?</a>";
                 vm.RenderTable = false;
@@ -275,7 +315,7 @@ namespace health_dashboard.Controllers
         {
             var response = await DeleteActivity(id);
 
-            if ((int)response.StatusCode != 201)
+            if (!response.IsSuccessStatusCode)
             {
                 return BadRequest();
             }
@@ -293,7 +333,8 @@ namespace health_dashboard.Controllers
         {
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
-                return await Client.DeleteAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/" + id);
+                var path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/" + id;
+                return await Client.DeleteAsync(path);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -302,6 +343,7 @@ namespace health_dashboard.Controllers
             };
             return r;
         }
+
 
         private async Task<HttpResponseMessage> DeleteGoal(int id)
         {
@@ -355,12 +397,12 @@ namespace health_dashboard.Controllers
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
             {
             */
-                var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
-                var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/getPersonal/" + userId);
-                goals = await response.Content.ReadAsAsync<List<UserChallenge>>();
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+            var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/getPersonal/" + userId);
+            goals = await response.Content.ReadAsAsync<List<UserChallenge>>();
             /*
             }
-            
+
             else
             {
                 //var challengesJson = System.IO.File.ReadAllText("./challenge-find-1.json");
@@ -436,9 +478,9 @@ namespace health_dashboard.Controllers
             List<ChallengeActivityType> activity_types;
             //if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("Challenge")))
             //{
-                string path = AppConfig.GetValue<string>("ChallengeUrl") + "api/activities";
-                var response = await Client.GetAsync(path);
-                activity_types = await response.Content.ReadAsAsync<List<ChallengeActivityType>>();
+            string path = AppConfig.GetValue<string>("ChallengeUrl") + "api/activities";
+            var response = await Client.GetAsync(path);
+            activity_types = await response.Content.ReadAsAsync<List<ChallengeActivityType>>();
             //}
             //else
             //{
@@ -453,9 +495,9 @@ namespace health_dashboard.Controllers
             List<GoalMetric> goal_metrics;
             //if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
             //{
-                var path = AppConfig.GetValue<string>("ChallengeUrl") + "api/goalMetric";
-                var response = await Client.GetAsync(path);
-                goal_metrics = await response.Content.ReadAsAsync<List<GoalMetric>>();
+            var path = AppConfig.GetValue<string>("ChallengeUrl") + "api/goalMetric";
+            var response = await Client.GetAsync(path);
+            goal_metrics = await response.Content.ReadAsAsync<List<GoalMetric>>();
             //}
             //else
             //{
@@ -494,7 +536,6 @@ namespace health_dashboard.Controllers
                 startTimestamp = Request.Form["start-time"],
                 endTimestamp = Request.Form["end-time"],
                 source = Request.Form["source"],
-                activityType = Request.Form["source"],
                 activityTypeId = StringValues.IsNullOrEmpty(Request.Form["activity-type"]) ? 0 : int.Parse(Request.Form["activity-type-id"]),
                 caloriesBurnt = StringValues.IsNullOrEmpty(Request.Form["calories-burnt"]) ? 0 : int.Parse(Request.Form["calories-burnt"]),
                 averageHeartRate = StringValues.IsNullOrEmpty(Request.Form["average-heart-rate"]) ? 0 : int.Parse(Request.Form["average-heart-rate"]),
@@ -514,12 +555,14 @@ namespace health_dashboard.Controllers
             };
             return r;
         }
-        
+
         private async Task<HttpResponseMessage> PostFormGoal()
         {
-            var uc = new {
+            var uc = new
+            {
                 userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
-                challenge = new {
+                challenge = new
+                {
                     startDateTime = Request.Form["start-time"][0], // Please, for the love of god, refactor this
                     endDateTime = Request.Form["end-time"][0], // Please, for the love of god, refactor this
                     goal = int.Parse(Request.Form["target"]),
@@ -571,11 +614,11 @@ namespace health_dashboard.Controllers
         public string Message { get; set; }
         public bool RenderTable { get; set; }
     }
-
     public class RankingsViewModel
     {
         public IPagedList<HealthActivity> Activities { get; set; }
-        public List<ActivityType> ActivityTypes { get; set; }
+        public Dictionary<int, string> ActivityTypeDict { get; set; }
+        public string[] GoalMetrics { get; set; }
         public string Message { get; set; }
         public bool RenderTables { get; set; }
     }

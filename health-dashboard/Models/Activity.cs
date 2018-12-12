@@ -8,7 +8,6 @@
         public string endTimestamp { get; set; } // ISO8601 w/o Time Zone
         public string source { get; set; }
         public int activityTypeId { get; set; }
-        public string activityType { get; set; }
         public int caloriesBurnt { get; set; }
         public int averageHeartRate { get; set; }
         public int stepsTaken { get; set; }

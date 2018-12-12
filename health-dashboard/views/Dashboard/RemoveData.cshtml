@@ -4,7 +4,7 @@
 @using X.PagedList.Mvc;
 @using X.PagedList;
 
-@{ 
+@{
     Dictionary<int, string> ActivityTypeStrings = new Dictionary<int, string>();
     if (Model.RenderTable) {
 
@@ -41,17 +41,17 @@
                             @foreach (var a in Model.Activities)
                             {
                                 <tr>
-                                    <td>@ActivityTypeStrings[a.ActivityType]</td>
+                                    <td>@ActivityTypeStrings[a.activityTypeId]</td>
                                     <td>
-                                        @(DateTime.Parse((string)a.StartTimestamp, CultureInfo.InvariantCulture).ToString())<br />
-                                        @(DateTime.Parse((string)a.EndTimestamp, CultureInfo.InvariantCulture).ToString())
+                                        @(DateTime.Parse((string)a.startTimestamp, CultureInfo.InvariantCulture).ToString())<br />
+                                        @(DateTime.Parse((string)a.endTimestamp, CultureInfo.InvariantCulture).ToString())
                                     </td>
-                                    <td>@a.CaloriesBurnt</td>
-                                    <td>@a.AverageHeartRate</td>
-                                    <td>@a.StepsTaken</td>
-                                    <td>@a.MetresTravelled</td>
-                                    <td>@a.MetresElevationGained</td>
-                                    <td><div class="activity-delete-message" data-id="@a.Id"></div><a href="#" class="activity-delete-ajax" data-id="@a.Id">Delete</a></td>
+                                    <td>@a.caloriesBurnt</td>
+                                    <td>@a.averageHeartRate</td>
+                                    <td>@a.stepsTaken</td>
+                                    <td>@a.metresTravelled</td>
+                                    <td>@a.metresElevationGained</td>
+                                    <td><div class="activity-delete-message" data-id="@a.id"><a href="#" class="activity-delete-ajax" data-id="@a.id">Delete</a></div></td>
                                 </tr>
                             }
                         </tbody>
@@ -68,24 +68,20 @@
 
 <script>
     window.onload = function () {
-        $(document).ready(function () {
-            $('.activity-delete-ajax').click(function (event) {
+        jQuery(document).ready(function () {
+            jQuery('.activity-delete-ajax').click(function (event) {
                 if (window.confirm("Are you sure you wish to delete that activity record?")) {
                     event.preventDefault();
-                    var link = $(this);
+                    var link = jQuery(this);
 
-                    $.ajax({
+                    jQuery.ajax({
                         type: 'POST',
                         url: '@Url.Action("RemoveDataAjax", "Dashboard")' + '/' + link.data("id"),
                         success: function (data, textStatus, jqXHR) {
-                            $('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Activity deleted successfully.</p>");
+                            jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Activity deleted successfully.</p>");
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
-                            $('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed</p>");
-                            console.log('.activity-delete-message[data-id=' + link.data("id") + ']')
-                            setTimeout(function () {
-                                $('.activity-delete-message[data-id=' + link.data("id") + ']').html("");
-                            }, 3000);
+                            jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed.</p>");
                         }
                     });
                 }
