@@ -51,7 +51,7 @@
                                     <td>@a.stepsTaken</td>
                                     <td>@a.metresTravelled</td>
                                     <td>@a.metresElevationGained</td>
-                                    <td><div class="activity-delete-message" data-id="@a.id"></div><a href="#" class="activity-delete-ajax" data-id="@a.id">Delete</a></td>
+                                    <td><div class="activity-delete-message" data-id="@a.id"><a href="#" class="activity-delete-ajax" data-id="@a.id">Delete</a></div></td>
                                 </tr>
                             }
                         </tbody>
@@ -68,24 +68,20 @@
 
 <script>
     window.onload = function () {
-        $(document).ready(function () {
-            $('.activity-delete-ajax').click(function (event) {
+        jQuery(document).ready(function () {
+            jQuery('.activity-delete-ajax').click(function (event) {
                 if (window.confirm("Are you sure you wish to delete that activity record?")) {
                     event.preventDefault();
-                    var link = $(this);
+                    var link = jQuery(this);
 
-                    $.ajax({
+                    jQuery.ajax({
                         type: 'POST',
                         url: '@Url.Action("RemoveDataAjax", "Dashboard")' + '/' + link.data("id"),
                         success: function (data, textStatus, jqXHR) {
-                            $('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Activity deleted successfully.</p>");
+                            jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Activity deleted successfully.</p>");
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
-                            $('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed</p>");
-                            console.log('.activity-delete-message[data-id=' + link.data("id") + ']')
-                            setTimeout(function () {
-                                $('.activity-delete-message[data-id=' + link.data("id") + ']').html("");
-                            }, 3000);
+                            jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed.</p>");
                         }
                     });
                 }
