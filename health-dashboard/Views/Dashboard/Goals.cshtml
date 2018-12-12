@@ -115,7 +115,7 @@
                             jQuery('.goal-delete-message[data-id=' + link.data("id") + ']').html("<p>Goal deleted successfully.</p>");
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
-                            jQuery('.goal-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed</p>");
+                            $('.goal-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed</p>");
                             console.log('.goal-delete-message[data-id=' + link.data("id") + ']')
                             setTimeout(function () {
                                 jQuery('.goal-delete-message[data-id=' + link.data("id") + ']').html("");
