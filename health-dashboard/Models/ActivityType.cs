@@ -11,4 +11,11 @@
         public int Id { get; set; }
         public string[] Mappings { get; set; }
     }
+
+    public class ChallengeActivityType
+    {
+        public int activityId { get; set; }
+        public string activityName { get; set; }
+        public int DbActivityId { get; set; }
+    }
 }
