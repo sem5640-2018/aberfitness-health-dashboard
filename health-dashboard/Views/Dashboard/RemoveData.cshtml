@@ -81,11 +81,8 @@
                             jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Activity deleted successfully.</p>");
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
-                            jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed</p>");
-                            console.log('.activity-delete-message[data-id=' + link.data("id") + ']')
-                            setTimeout(function () {
-                                jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("");
-                            }, 3000);
+                            jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed.</p>");
+                            console.log('.activity-delete-message[data-id=' + link.data("id") + ']');
                         }
                     });
                 }
