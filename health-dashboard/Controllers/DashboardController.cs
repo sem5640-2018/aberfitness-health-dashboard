@@ -501,7 +501,6 @@ namespace health_dashboard.Controllers
                     goal = int.Parse(Request.Form["target"]),
                     GoalMetricId = int.Parse(Request.Form["goal-metric"]),
                     activityId = int.Parse(Request.Form["activity-type"]),
-                    isGroupChallenge = false,
                 },
             };
             var foo = JsonConvert.SerializeObject(uc);
