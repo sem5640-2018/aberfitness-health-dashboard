@@ -97,6 +97,7 @@ namespace health_dashboard.Controllers
             IndexViewModel vm = new IndexViewModel();
 
             vm.ActivityTypes = await GetActivityTypes();
+            vm.ChallengeJoinUrl = AppConfig.GetValue<string>("ChallengeUrl");
 
             // This may want to be a different method, if only the last month of data is desired
             DateTime today = DateTime.Today;
@@ -371,7 +372,7 @@ namespace health_dashboard.Controllers
             {
             */
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
-            var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challenges/getGroup/" + userId);
+            var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/getGroup/" + userId);
             challenges = await response.Content.ReadAsAsync<List<UserChallenge>>();
             /*
             }
@@ -393,7 +394,7 @@ namespace health_dashboard.Controllers
             {
             */
                 var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
-                var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challenges/getPersonal/" + userId);
+                var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/getPersonal/" + userId);
                 goals = await response.Content.ReadAsAsync<List<UserChallenge>>();
             /*
             }
@@ -506,7 +507,7 @@ namespace health_dashboard.Controllers
             var foo = JsonConvert.SerializeObject(uc);
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
             {
-                return await Client.PostAsync<object>(AppConfig.GetValue<string>("ChallengeUrl") + "api/challenges", uc);
+                return await Client.PostAsync<object>(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage", uc);
             }
 
             HttpResponseMessage r = new HttpResponseMessage
@@ -529,6 +530,7 @@ namespace health_dashboard.Controllers
         public Dictionary<string, List<HealthActivity>> Activities { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
         public List<UserChallenge> Challenges { get; set; }
+        public string ChallengeJoinUrl { get; set; }
         public List<UserChallenge> Goals { get; set; }
     }
 
