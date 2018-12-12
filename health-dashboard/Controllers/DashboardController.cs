@@ -316,7 +316,7 @@ namespace health_dashboard.Controllers
         {
             var response = await DeleteActivity(id);
 
-            if ((int)response.StatusCode != 201)
+            if (!response.IsSuccessStatusCode)
             {
                 return BadRequest();
             }
@@ -334,6 +334,7 @@ namespace health_dashboard.Controllers
         {
             if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
             {
+                var path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/" + id;
                 return await Client.DeleteAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity/" + id);
             }
 
