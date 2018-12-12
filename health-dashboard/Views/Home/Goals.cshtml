@@ -112,7 +112,7 @@
 
                     jQuery.ajax({
                         type: 'POST',
-                        url: '@Url.Action("GoalDeleteAjax", "Dashboard")' + '/' + link.data("id"),
+                        url: '@Url.Action("GoalDeleteAjax", "Home")' + '/' + link.data("id"),
                         success: function (data, textStatus, jqXHR) {
                             jQuery('.goal-delete-message[data-id=' + link.data("id") + ']').html("<p>Goal deleted successfully.</p>");
                         },
