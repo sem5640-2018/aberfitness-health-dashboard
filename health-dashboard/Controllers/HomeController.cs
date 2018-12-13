@@ -103,7 +103,6 @@ namespace health_dashboard.Controllers
             // This may want to be a different method, if only the last month of data is desired
             DateTime today = DateTime.Today;
             DateTime weekAgo = DateTime.Today.AddDays(-7);
-            var path = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             List<HealthActivity> api_activities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, weekAgo.ToString("yyyy-MM-dd"), today.ToString("yyyy-MM-dd"));
 
             Dictionary<string, List<HealthActivity>> activities_by_type = new Dictionary<string, List<HealthActivity>>();
