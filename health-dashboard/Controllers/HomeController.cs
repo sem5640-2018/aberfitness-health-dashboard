@@ -60,7 +60,7 @@ namespace health_dashboard.Controllers
                 var response = await PostFormGoal();
 
                 // Add success / failure message
-                if ((int)response.StatusCode == 201)
+                if ( response.IsSuccessStatusCode )
                 {
                     vm.Message = "Success";
                 }
@@ -145,7 +145,7 @@ namespace health_dashboard.Controllers
                 var response = await PostFormActivity();
 
                 // Add success / failure message
-                if ((int)response.StatusCode == 201)
+                if (response.IsSuccessStatusCode)
                 {
                     vm.Message = "Success";
                 }
@@ -163,7 +163,7 @@ namespace health_dashboard.Controllers
         {
             var response = await PostFormActivity();
 
-            if ((int)response.StatusCode != 201)
+            if (response.IsSuccessStatusCode)
             {
                 return BadRequest();
             }
@@ -352,185 +352,82 @@ namespace health_dashboard.Controllers
 
         private async Task<List<UserChallenge>> GetGroupChallenges()
         {
-            List<UserChallenge> challenges;
-            // Not worth fixing this - next job is to remove this code anyway
-            /*
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")) && !String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
-            {
-            */
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/getGroup/" + userId);
-            challenges = await response.Content.ReadAsAsync<List<UserChallenge>>();
-            /*
-            }
-            else
-            {
-                var challengesJson = System.IO.File.ReadAllText("./challenge-find-1.json");
-                challenges = (List<Challenge>)JsonConvert.DeserializeObject(challengesJson, typeof(List<Challenge>));
-            }
-            */
-            return challenges;
+            return await response.Content.ReadAsAsync<List<UserChallenge>>();
         }
 
         private async Task<List<ActivityType>> GetHealthDataActivityTypes()
         {
-            List<ActivityType> activity_types;
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
-            {
-                string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/ActivityTypes";
-                var response = await Client.GetAsync(path);
-                activity_types = await response.Content.ReadAsAsync<List<ActivityType>>();
-            }
-            else
-            {
-                var activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
-                activity_types = (List<ActivityType>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<ActivityType>));
-            }
-            return activity_types;
+            string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/ActivityTypes";
+            var response = await Client.GetAsync(path);
+            return await response.Content.ReadAsAsync<List<ActivityType>>();
         }
 
         private async Task<List<UserChallenge>> GetPersonalGoals()
         {
-            List<UserChallenge> goals;
-            // Not worth fixing this - next job is to remove this code anyway
-            /*
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
-            {
-            */
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/getPersonal/" + userId);
-            goals = await response.Content.ReadAsAsync<List<UserChallenge>>();
-            /*
-            }
+            return await response.Content.ReadAsAsync<List<UserChallenge>>();
 
-            else
-            {
-                //var challengesJson = System.IO.File.ReadAllText("./challenge-find-1.json");
-                //challenges = (List<Challenge>)JsonConvert.DeserializeObject(challengesJson, typeof(List<Challenge>));
-            }
-            */
-            return goals;
         }
 
         private async Task<List<HealthActivity>> GetUserActivities(string userId, string from = null, string to = null)
         {
             if (from == null ^ to == null)
             {
-                throw new ArgumentException();
+                throw new ArgumentException("Either both or neither 'from' and 'to' dates must be specified.");
             }
 
-            List<HealthActivity> activities;
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
+            string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/ByUser/" + (String.IsNullOrEmpty(userId) ? User.Claims.FirstOrDefault(c => c.Type == "sub").Value : userId);
+            if (from != null)
             {
-                string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/ByUser/" + (String.IsNullOrEmpty(userId) ? User.Claims.FirstOrDefault(c => c.Type == "sub").Value : userId);
-                if (from != null)
-                {
-                    path += "?from=" + from + "&to=" + to;
-                }
+                path += "?from=" + from + "&to=" + to;
+            }
 
-                var response = await Client.GetAsync(path);
-                activities = await response.Content.ReadAsAsync<List<HealthActivity>>();
-            }
-            else
-            {
-                var activities_json = System.IO.File.ReadAllText("./activity-find-1.json");
-                activities = (List<HealthActivity>)JsonConvert.DeserializeObject(activities_json, typeof(List<HealthActivity>));
-            }
-            return activities;
+            var response = await Client.GetAsync(path);
+            return await response.Content.ReadAsAsync<List<HealthActivity>>();
+
         }
-
-        // TODO GetUserGroups() method
+        
         private async Task<List<Group>> GetUserGroups()
         {
-            List<Group> groups;
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
-            {
-                var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/");
-                groups = await response.Content.ReadAsAsync<List<Group>>();
-            }
-            else
-            {
-                var groups_json = System.IO.File.ReadAllText("./group-find-all.json");
-                groups = (List<Group>)JsonConvert.DeserializeObject(groups_json, typeof(List<Group>));
-            }
-            return groups;
+            var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/");
+            return await response.Content.ReadAsAsync<List<Group>>();
         }
-
-        // TODO GetUserGroupWithMembers() method
+        
         private async Task<GroupWithMembers> GetUserGroupWithMembers(int groupId)
         {
-            GroupWithMembers group;
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
-            {
-                var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/" + groupId);
-                group = await response.Content.ReadAsAsync<GroupWithMembers>();
-            }
-            else
-            {
-                var group_json = System.IO.File.ReadAllText("./group-find-1-detailed.json");
-                group = (GroupWithMembers)JsonConvert.DeserializeObject(group_json, typeof(GroupWithMembers));
-            }
-            return group;
+            var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/" + groupId);
+            return await response.Content.ReadAsAsync<GroupWithMembers>();
         }
 
         private async Task<List<ChallengeActivityType>> GetValidChallengeActivityTypes()
         {
-            List<ChallengeActivityType> activity_types;
-            //if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("Challenge")))
-            //{
             string path = AppConfig.GetValue<string>("ChallengeUrl") + "api/activities";
             var response = await Client.GetAsync(path);
-            activity_types = await response.Content.ReadAsAsync<List<ChallengeActivityType>>();
-            //}
-            //else
-            //{
-            //    var activity_types_json = System.IO.File.ReadAllText("./activity-types.json");
-            //    activity_types = (List<ActivityType>)JsonConvert.DeserializeObject(activity_types_json, typeof(List<ActivityType>));
-            //}
-            return activity_types;
+            return await response.Content.ReadAsAsync<List<ChallengeActivityType>>();
         }
 
         private async Task<List<GoalMetric>> GetGoalMetrics()
         {
-            List<GoalMetric> goal_metrics;
-            //if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
-            //{
             var path = AppConfig.GetValue<string>("ChallengeUrl") + "api/goalMetric";
             var response = await Client.GetAsync(path);
-            goal_metrics = await response.Content.ReadAsAsync<List<GoalMetric>>();
-            //}
-            //else
-            //{
-            //    var group_json = System.IO.File.ReadAllText("./group-find-1-detailed.json");
-            //    group = (GroupWithMembers)JsonConvert.DeserializeObject(group_json, typeof(GroupWithMembers));
-            //}
-
-            return goal_metrics;
+            return await response.Content.ReadAsAsync<List<GoalMetric>>();
         }
-
-        // TODO GetUserGroups() method
+        
         private async Task<GroupWithMembers> GetGroupOfUser()
         {
-            GroupWithMembers group;
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("UserGroupsUrl")))
-            {
-                var path = AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/ForUser/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
-                var response = await Client.GetAsync(path);
-                group = await response.Content.ReadAsAsync<GroupWithMembers>();
-            }
-            else
-            {
-                var group_json = System.IO.File.ReadAllText("./group-find-1-detailed.json");
-                group = (GroupWithMembers)JsonConvert.DeserializeObject(group_json, typeof(GroupWithMembers));
-            }
 
-            return group;
+            var path = AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/ForUser/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+            var response = await Client.GetAsync(path);
+            return await response.Content.ReadAsAsync<GroupWithMembers>();
         }
 
         private async Task<HttpResponseMessage> PostFormActivity()
         {
             // Parsing null string problems
-            HealthActivity activity = new HealthActivity
+            var activity = new
             {
                 userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
                 startTimestamp = Request.Form["start-time"],
@@ -544,16 +441,7 @@ namespace health_dashboard.Controllers
                 metresElevationGained = StringValues.IsNullOrEmpty(Request.Form["metres-elevation-gained"]) ? 0 : int.Parse(Request.Form["metres-elevation-gained"])
             };
 
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
-            {
-                return await Client.PostAsync<HealthActivity>(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity", activity);
-            }
-
-            HttpResponseMessage r = new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.ServiceUnavailable
-            };
-            return r;
+            return await Client.PostAsync<object>(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity", activity);
         }
 
         private async Task<HttpResponseMessage> PostFormGoal()
@@ -563,24 +451,14 @@ namespace health_dashboard.Controllers
                 userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
                 challenge = new
                 {
-                    startDateTime = Request.Form["start-time"][0], // Please, for the love of god, refactor this
-                    endDateTime = Request.Form["end-time"][0], // Please, for the love of god, refactor this
+                    startDateTime = Request.Form["start-time"].ToString(),
+                    endDateTime = Request.Form["end-time"].ToString(),
                     goal = int.Parse(Request.Form["target"]),
                     GoalMetricId = int.Parse(Request.Form["goal-metric"]),
                     activityId = int.Parse(Request.Form["activity-type"]),
                 },
             };
-            var foo = JsonConvert.SerializeObject(uc);
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("ChallengeUrl")))
-            {
-                return await Client.PostAsync<object>(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage", uc);
-            }
-
-            HttpResponseMessage r = new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.ServiceUnavailable
-            };
-            return r;
+            return await Client.PostAsync<object>(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage", uc);
         }
     }
 
