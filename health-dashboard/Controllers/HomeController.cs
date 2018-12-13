@@ -229,7 +229,7 @@ namespace health_dashboard.Controllers
                         }
                         else
                         {
-                            vm.Message = "Nobody in your group currently has any activities, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some?</a>";
+                            vm.Message = "Nobody in your group currently has any activity data, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some</a>?";
                             renderTables = false;
                         }
                     }
@@ -269,13 +269,13 @@ namespace health_dashboard.Controllers
                 }
                 else
                 {
-                    vm.Message = "Nobody in your group currently has any activities, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some?</a>";
+                    vm.Message = "Nobody in your group currently has any activities, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some</a>?";
                     vm.RenderTables = false;
                 }
             }
             else
             {
-                vm.Message = "You aren't currently a member of a group. Would you like to <a href=" + AppConfig.GetValue<string>("UserGroupsUrl") + ">join one?</a>";
+                vm.Message = "You aren't currently a member of a group. Would you like to <a href=" + AppConfig.GetValue<string>("UserGroupsUrl") + ">join one</a>?";
                 vm.RenderTables = false;
             }
 
