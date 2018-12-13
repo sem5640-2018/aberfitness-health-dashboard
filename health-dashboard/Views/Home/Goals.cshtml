@@ -91,8 +91,8 @@
                                 <td>@g.challenge.activity.activityName</td>
                                 <td>@(Math.Floor((double)((int)g.challenge.goal * (int)g.percentageComplete / 100))) @g.challenge.GoalMetric.GoalMetricDisplay</td>
                                 <td>@g.challenge.goal @g.challenge.GoalMetric.GoalMetricDisplay</td>
-                                <td>@(DateTime.Parse((string)g.challenge.startDateTime, CultureInfo.InvariantCulture).ToString()) - @(DateTime.Parse((string)g.challenge.endDateTime, CultureInfo.InvariantCulture).ToString())</td>
-                                <td><div class="goal-delete-message" data-id="@g.userChallengeId"></div><a href="#" class="goal-delete-ajax" data-id="@g.userChallengeId">Delete</a></td>
+                                <td>@g.challenge.startDateTime - @g.challenge.endDateTime</td>
+                                <td><div class="goal-delete-message" data-id="@g.userChallengeId"><a href="#" class="goal-delete-ajax" data-id="@g.userChallengeId">Delete</a></div></td>
                             </tr>
                         }
                     </tbody>

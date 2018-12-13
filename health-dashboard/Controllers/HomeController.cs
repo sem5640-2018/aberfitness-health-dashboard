@@ -437,8 +437,8 @@ namespace health_dashboard.Controllers
                 userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
                 challenge = new
                 {
-                    startDateTime = Request.Form["start-time"].ToString(),
-                    endDateTime = Request.Form["end-time"].ToString(),
+                    startDateTime = DateTime.Parse(Request.Form["start-time"]),
+                    endDateTime = DateTime.Parse(Request.Form["end-time"]),
                     goal = int.Parse(Request.Form["target"]),
                     GoalMetricId = int.Parse(Request.Form["goal-metric"]),
                     activityId = int.Parse(Request.Form["activity-type"]),
