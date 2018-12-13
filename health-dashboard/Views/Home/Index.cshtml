@@ -167,7 +167,7 @@
                 event.preventDefault();
 
                 var form = jQuery('form.ajax-form-activity')
-                var datetime = form.find('#date').val() + "T21:00:00";
+                var datetime = form.find('#date').val() + "T00:00:00";
                 form.find('[name=start-time]').val(datetime); 
                 form.find('[name=end-time]').val(datetime); 
 
@@ -178,13 +178,13 @@
                     success: function (data, textStatus, jqXHR) {
                         jQuery('.activity-form-message').html("<p>Ajax Success</p>");
                         setTimeout(function () {
-                            $('.activity-form-message').html("");
+                            jQuery('.activity-form-message').html("");
                         }, 3000);
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
                         jQuery('.activity-form-message').html("<p>Ajax Failure</p>");
                         setTimeout(function () {
-                            $('.activity-form-message').html("");
+                            jQuery('.activity-form-message').html("");
                         }, 3000);
                     }
                 });

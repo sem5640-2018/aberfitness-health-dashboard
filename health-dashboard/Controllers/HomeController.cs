@@ -164,9 +164,9 @@ namespace health_dashboard.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                return BadRequest();
+                return Ok();
             }
-            return Ok();
+            return BadRequest(response.Content.ReadAsStringAsync());
         }
 
         public async Task<IActionResult> Rankings(int page = 1)
@@ -176,7 +176,7 @@ namespace health_dashboard.Controllers
             List<HealthActivity> userActivities = new List<HealthActivity>();
             List<HealthActivity> userActivitiesCombined = new List<HealthActivity>();
             bool activityAlreadyAdded;
-            GroupWithMembers groupWithMembers = await GetGroupOfUser();
+            GroupWithMembers groupWithMembers = await GetGroupOfCurrentUser();
             List<string> goalMetricStringsList = new List<string>
             {
                 "caloriesBurnt",
@@ -330,17 +330,7 @@ namespace health_dashboard.Controllers
         /* ------ API Calls and Responses ------ */
         private async Task<HttpResponseMessage> DeleteActivity(int id)
         {
-            if (!String.IsNullOrEmpty(AppConfig.GetValue<string>("HealthDataRepositoryUrl")))
-            {
-                var path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/" + id;
-                return await Client.DeleteAsync(path);
-            }
-
-            HttpResponseMessage r = new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.ServiceUnavailable
-            };
-            return r;
+            return await Client.DeleteAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/" + id);
         }
 
 
@@ -358,8 +348,7 @@ namespace health_dashboard.Controllers
 
         private async Task<List<ActivityType>> GetHealthDataActivityTypes()
         {
-            string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/ActivityTypes";
-            var response = await Client.GetAsync(path);
+            var response = await Client.GetAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/ActivityTypes");
             return await response.Content.ReadAsAsync<List<ActivityType>>();
         }
 
@@ -378,7 +367,7 @@ namespace health_dashboard.Controllers
                 throw new ArgumentException("Either both or neither 'from' and 'to' dates must be specified.");
             }
 
-            string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/ByUser/" + (String.IsNullOrEmpty(userId) ? User.Claims.FirstOrDefault(c => c.Type == "sub").Value : userId);
+            string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/ByUser/" +  userId;
             if (from != null)
             {
                 path += "?from=" + from + "&to=" + to;
@@ -403,23 +392,21 @@ namespace health_dashboard.Controllers
 
         private async Task<List<ChallengeActivityType>> GetValidChallengeActivityTypes()
         {
-            string path = AppConfig.GetValue<string>("ChallengeUrl") + "api/activities";
-            var response = await Client.GetAsync(path);
+            var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/activities");
             return await response.Content.ReadAsAsync<List<ChallengeActivityType>>();
         }
 
         private async Task<List<GoalMetric>> GetGoalMetrics()
         {
-            var path = AppConfig.GetValue<string>("ChallengeUrl") + "api/goalMetric";
-            var response = await Client.GetAsync(path);
+            var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/goalMetric");
             return await response.Content.ReadAsAsync<List<GoalMetric>>();
         }
         
-        private async Task<GroupWithMembers> GetGroupOfUser()
+        private async Task<GroupWithMembers> GetGroupOfCurrentUser()
         {
 
-            var path = AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/ForUser/" + User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
-            var response = await Client.GetAsync(path);
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+            var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/ForUser/" + userId);
             return await response.Content.ReadAsAsync<GroupWithMembers>();
         }
 
@@ -429,10 +416,10 @@ namespace health_dashboard.Controllers
             var activity = new
             {
                 userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value,
-                startTimestamp = Request.Form["start-time"],
-                endTimestamp = Request.Form["end-time"],
-                source = Request.Form["source"],
-                activityTypeId = StringValues.IsNullOrEmpty(Request.Form["activity-type"]) ? 0 : int.Parse(Request.Form["activity-type-id"]),
+                startTimestamp = Request.Form["start-time"].ToString(),
+                endTimestamp = Request.Form["end-time"].ToString(),
+                source = "Manual",
+                activityTypeId = StringValues.IsNullOrEmpty(Request.Form["activity-type"]) ? 0 : int.Parse(Request.Form["activity-type"]),
                 caloriesBurnt = StringValues.IsNullOrEmpty(Request.Form["calories-burnt"]) ? 0 : int.Parse(Request.Form["calories-burnt"]),
                 averageHeartRate = StringValues.IsNullOrEmpty(Request.Form["average-heart-rate"]) ? 0 : int.Parse(Request.Form["average-heart-rate"]),
                 stepsTaken = StringValues.IsNullOrEmpty(Request.Form["steps-taken"]) ? 0 : int.Parse(Request.Form["steps-taken"]),
@@ -440,7 +427,7 @@ namespace health_dashboard.Controllers
                 metresElevationGained = StringValues.IsNullOrEmpty(Request.Form["metres-elevation-gained"]) ? 0 : int.Parse(Request.Form["metres-elevation-gained"])
             };
 
-            return await Client.PostAsync<object>(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "activity", activity);
+            return await Client.PostAsync<object>(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "/api/activities", activity);
         }
 
         private async Task<HttpResponseMessage> PostFormGoal()
