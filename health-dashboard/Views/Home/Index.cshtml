@@ -176,13 +176,13 @@
                     url: '@Url.Action("InputAjax", "Home")',
                     data: form.serialize(),
                     success: function (data, textStatus, jqXHR) {
-                        jQuery('.activity-form-message').html("<p>Ajax Success</p>");
+                        jQuery('.activity-form-message').html("<p>Steps recorded successfully.</p>");
                         setTimeout(function () {
                             jQuery('.activity-form-message').html("");
                         }, 3000);
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
-                        jQuery('.activity-form-message').html("<p>Ajax Failure</p>");
+                        jQuery('.activity-form-message').html("<p>Steps save failed. Please contact a coordinator or an administrator.</p>");
                         setTimeout(function () {
                             jQuery('.activity-form-message').html("");
                         }, 3000);
