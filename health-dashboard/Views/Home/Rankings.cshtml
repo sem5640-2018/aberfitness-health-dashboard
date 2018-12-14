@@ -65,27 +65,31 @@
     </div>
 </div>
 <script>
-    function updateActivityAndMetric() {
-        var goalMetricTypes = [];
-        @foreach (var g in Model.GoalMetrics)
-        {
-            @:goalMetricTypes.push("@g");
-        }
-        var selectedActivityId = document.getElementById("activityTypeDDL").selectedIndex + 1;
-        var selectedMetricId = document.getElementById("metricTypeDDL").selectedIndex;
-        var activityCount = @Model.ActivityTypeDict.Count;
-        var metricCount = @Model.GoalMetrics.Length;
-        var goalMetricId = "metric-";
-        var activityId = "activity-";
-        for (j = 0; j < metricCount; j++) {
-            for (i = 1; i < activityCount + 1; i++) {
-                goalMetricId = "metric-" + goalMetricTypes[j]
-                activityId = "activity-" + i
-                var activityMetricTable = document.getElementById(activityId + "-" + goalMetricId);
+    @if (Model.RenderTables)
+    {
+        @:function updateActivityAndMetric() {
+            @:var goalMetricTypes = [];
 
-                activityMetricTable.hidden = !(j == selectedMetricId && i == selectedActivityId);
+            @foreach(var g in Model.GoalMetrics)
+            {
+                @:goalMetricTypes.push("@g");
             }
-        }
+            @:var selectedActivityId = document.getElementById("activityTypeDDL").selectedIndex + 1;
+            @:var selectedMetricId = document.getElementById("metricTypeDDL").selectedIndex;
+            @:var activityCount = @Model.ActivityTypeDict.Count;
+            @:var metricCount = @Model.GoalMetrics.Length;
+            @:var goalMetricId = "metric-";
+            @:var activityId = "activity-";
+            @:for (j = 0; j < metricCount; j++) {
+                @:for (i = 1; i < activityCount + 1; i++) {
+                    @:goalMetricId = "metric-" + goalMetricTypes[j]
+                    @:activityId = "activity-" + i
+                    @:var activityMetricTable = document.getElementById(activityId + "-" + goalMetricId);
+
+                    @:activityMetricTable.hidden = !(j == selectedMetricId && i == selectedActivityId);
+                @:}
+            @:}
+            @:updateActivityAndMetric();
+        @:}
     }
-    updateActivityAndMetric();
 </script>
