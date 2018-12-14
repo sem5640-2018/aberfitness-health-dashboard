@@ -57,6 +57,16 @@
                 <div class="clearfix"></div>
             </div>
             <div class="card-body">
+                @if (Model.Challenges.Count == 0)
+                {
+                    <div class="">
+                        <span>You currently have no group challenges.</span>
+                    </div>
+                    <div class="">
+                        <span>Would you like to join one?</span>
+                    </div>
+                    <br />
+                }
                 @foreach (var ch in Model.Challenges)
                 {
                     <div class="">
@@ -89,6 +99,16 @@
                 <div class="clearfix"></div>
             </div>
             <div class="card-body">
+                @if (Model.Goals.Count == 0)
+                {
+                    <div class="">
+                        <span>You currently have no personal goals.</span>
+                    </div>
+                    <div class="">
+                        <span>Would you like to make one?</span>
+                    </div>
+                    <br />
+                }
                 @foreach (var g in Model.Goals)
                 {
                     <div class="">
