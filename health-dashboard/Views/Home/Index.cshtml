@@ -68,7 +68,10 @@
                         </div>
                     </div>
                     <div>
-                        <span>@ch.percentageComplete% Complete</span>
+                        <span>@ch.percentageComplete% Complete </span>
+                    </div>
+                    <div>
+                        <span>until @ch.challenge.endDateTime.ToString("dd/MM/yyyy hh:mm:ss")</span>
                     </div>
                     <br />
                     <div class="clearfix"></div>
@@ -120,9 +123,9 @@
                     type: 'line',
                     data: {
                         labels: [
-                            @foreach (KeyValuePair<string, List<HealthActivity>> day in Model.Activities)
+                            @foreach (KeyValuePair<DateTime, List<HealthActivity>> day in Model.Activities)
                             {
-                                var outString = string.Concat('"', day.Key, "\",");
+                                var outString = string.Concat('"', day.Key.ToShortDateString(), "\",");
                                 @Html.Raw(outString);
                             }
                         ],
@@ -130,7 +133,7 @@
                             label: '# of Steps',
                             data: [
                                 @{
-                                    foreach (KeyValuePair<string, List<HealthActivity>> day in Model.Activities)
+                                    foreach (KeyValuePair<DateTime, List<HealthActivity>> day in Model.Activities)
                                     {
                                         var stepCount = 0;
                                         foreach (HealthActivity ha in day.Value)
