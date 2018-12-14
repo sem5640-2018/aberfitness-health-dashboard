@@ -222,6 +222,11 @@ namespace health_dashboard.Controllers
                 activityOccurences.Add(type.Id, 0);
             }
 
+            int totalActivityKey = activityTypeDict.Last().Key + 1;
+            activityTypeDict.TryAdd(totalActivityKey, "All (Total)");
+            activityOccurences.TryAdd(totalActivityKey, 0);
+
+
             if (groupWithMembers != null)
             {
                 if (activityTypes.Count > 0)
@@ -231,6 +236,21 @@ namespace health_dashboard.Controllers
                         userActivities = await GetUserActivities(groupWithMembers.Members[i].UserId);
                         if (userActivities.Count > 0)
                         {
+                            // append extra activity to each user's list of activities which contains combined total of all user's activities
+                            HealthActivity healthActivityTotal = new HealthActivity
+                            {
+                                activityTypeId = totalActivityKey,
+                                id = 0,
+                                userId = groupWithMembers.Members[i].UserId,
+                                averageHeartRate = 0,
+                                caloriesBurnt = 0,
+                                stepsTaken = 0,
+                                metresElevationGained = 0,
+                                metresTravelled = 0,
+                                startTimestamp = DateTime.Today,
+                                endTimestamp = DateTime.Today.AddDays(1),
+                                source = "Manual",
+                            };
                             foreach (HealthActivity ha in userActivities)
                             {
                                 activityAlreadyAdded = false;
@@ -248,9 +268,15 @@ namespace health_dashboard.Controllers
                                     }
                                     hac.metresElevationGained = Math.Max(0, hac.metresElevationGained);
                                 }
+                                healthActivityTotal.caloriesBurnt += ha.caloriesBurnt;
+                                healthActivityTotal.metresTravelled += ha.metresTravelled;
+                                healthActivityTotal.stepsTaken += ha.stepsTaken;
+                                healthActivityTotal.metresElevationGained += ha.metresElevationGained;
                                 if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
                                 activityOccurences[ha.activityTypeId]++;
                             }
+                            activityOccurences[totalActivityKey] = 1;
+                            userActivitiesCombined.Add(healthActivityTotal);
                         }
                         else
                         {
