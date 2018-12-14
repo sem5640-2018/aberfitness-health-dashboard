@@ -188,29 +188,27 @@
 
             jQuery('form.ajax-form-activity').submit(function (event) {
                 event.preventDefault();
-
                 var form = jQuery('form.ajax-form-activity')
-                var datetime = form.find('#date').val() + "T00:00:00";
-                form.find('[name=start-time]').val(datetime); 
-                form.find('[name=end-time]').val(datetime); 
 
-                jQuery.ajax({
-                    type: 'POST',
-                    url: '@Url.Action("InputAjax", "Home")',
-                    data: form.serialize(),
-                    success: function (data, textStatus, jqXHR) {
-                        jQuery('.activity-form-message').html("<p>Steps recorded successfully.</p>");
-                        setTimeout(function () {
-                            jQuery('.activity-form-message').html("");
-                        }, 3000);
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        jQuery('.activity-form-message').html("<p>Steps save failed. Please contact a coordinator or an administrator.</p>");
-                        setTimeout(function () {
-                            jQuery('.activity-form-message').html("");
-                        }, 3000);
-                    }
-                });
+                if (/^[0-9.]*$/.exec( form.find('#steps-taken').val())) {
+                    var datetime = form.find('#date').val() + "T00:00:00";
+                    form.find('[name=start-time]').val(datetime);
+                    form.find('[name=end-time]').val(datetime);
+
+                    jQuery.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("InputAjax", "Home")',
+                        data: form.serialize(),
+                        success: function (data, textStatus, jqXHR) {
+                            jQuery('.activity-form-message').html("<p>Steps recorded successfully.</p>");
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            jQuery('.activity-form-message').html("<p>Steps save failed. Please contact a coordinator or an administrator.</p>");
+                        }
+                    });
+                } else {
+                    jQuery('.activity-form-message').html("<p>Steps Taken must be a number.</p>");
+                }
             });
         });
     };

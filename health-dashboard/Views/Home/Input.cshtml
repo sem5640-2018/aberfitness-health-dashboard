@@ -5,10 +5,12 @@
                 <h1 class="box-title">Record Activity</h1>
             </div>
             <div class="card-body">
-                @if (Model.Message != null)
-                {
-                    <div>@Html.Raw(Model.Message)</div>
-                }
+                <div class="message-box">
+                    @if (Model.Message != null)
+                    {
+                        @Html.Raw(Model.Message)
+                    }   
+                </div>
                 <form method="post" action="#">
                     <div class="form-group">
                         <label class="form-control-label" for="start-time">
@@ -73,3 +75,31 @@
         </div>
     </div>
 </div>
+
+<script>
+    window.onload = function () {
+        jQuery(document).ready(function () {
+            @{               
+                var metrics = new Dictionary<string, string>()
+                {
+                    { "calories-burnt", "Calories Burnt" },
+                    { "average-heart-rate", "Average Heart Rate" },
+                    { "steps-taken", "Steps Taken" },
+                    { "metres-travelled", "Metres Travelled" },
+                    { "metres-elevation-gained", "Elevation Gained" }
+                };
+            }
+
+            @foreach (var m in metrics) {
+                @:jQuery('.message-box').append("<p class='@m.Key'></p>");
+
+                @:jQuery('form').submit(function (event) {
+                    @:if (! /^[0-9.]*$/.exec(jQuery('form').find('#@m.Key').val())) {
+                        @:event.preventDefault();
+                        @:jQuery('.message-box .@m.Key').html("@m.Value must be a number.");
+                    @:}
+                @:});
+            }
+        });
+    };
+</script>
