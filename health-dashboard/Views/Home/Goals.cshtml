@@ -7,12 +7,12 @@
                 <h1 class="box-title">Add a Personal Goal</h1>
             </div>
             <div class="card-body">
-                @if (Model.Message != null)
-                {
-                    <div>
+                <div class="message-box">
+                    @if (Model.Message != null)
+                    {
                         @Model.Message
-                    </div>
-                }
+                    }
+                </div>
                 <form method="post" action="#">
                     <div class="form-group">
                         <label class="form-control-label" for="activity-type">
@@ -123,10 +123,11 @@
                 }
             });
 
-            jQuery('.standardSelect').chosen({
-                disable_search_threshold: 10,
-                no_results_text: "Oops, nothing found!",
-                width: "100%"
+            jQuery('form').submit(function (event) {
+                if (! /^[0-9.]*$/.exec(jQuery('form').find('#target').val())) {
+                    event.preventDefault();
+                    jQuery('.message-box').html("<p>Target must be a number.</p>");
+                }
             });
         });
     };
