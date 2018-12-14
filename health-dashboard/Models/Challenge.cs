@@ -1,10 +1,12 @@
-﻿namespace health_dashboard.Models
+﻿using System;
+
+namespace health_dashboard.Models
 {
     public class Challenge
     {
         public int? challengeId { get; set; }
-        public string startDateTime { get; set; }
-        public string endDateTime { get; set; }
+        public DateTime startDateTime { get; set; }
+        public DateTime endDateTime { get; set; }
         public int goal { get; set; }
         public GoalMetric GoalMetric { get; set; }
         public int GoalMetricId { get; set; }

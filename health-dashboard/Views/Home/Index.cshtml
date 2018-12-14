@@ -57,6 +57,16 @@
                 <div class="clearfix"></div>
             </div>
             <div class="card-body">
+                @if (Model.Challenges.Count == 0)
+                {
+                    <div class="">
+                        <span>You currently have no group challenges.</span>
+                    </div>
+                    <div class="">
+                        <span>Would you like to join one?</span>
+                    </div>
+                    <br />
+                }
                 @foreach (var ch in Model.Challenges)
                 {
                     <div class="">
@@ -68,7 +78,10 @@
                         </div>
                     </div>
                     <div>
-                        <span>@ch.percentageComplete% Complete</span>
+                        <span>@ch.percentageComplete% Complete </span>
+                    </div>
+                    <div>
+                        <span>until @ch.challenge.endDateTime.ToString("dd/MM/yyyy hh:mm:ss")</span>
                     </div>
                     <br />
                     <div class="clearfix"></div>
@@ -86,6 +99,16 @@
                 <div class="clearfix"></div>
             </div>
             <div class="card-body">
+                @if (Model.Goals.Count == 0)
+                {
+                    <div class="">
+                        <span>You currently have no personal goals.</span>
+                    </div>
+                    <div class="">
+                        <span>Would you like to make one?</span>
+                    </div>
+                    <br />
+                }
                 @foreach (var g in Model.Goals)
                 {
                     <div class="">
@@ -120,9 +143,9 @@
                     type: 'line',
                     data: {
                         labels: [
-                            @foreach (KeyValuePair<string, List<HealthActivity>> day in Model.Activities)
+                            @foreach (KeyValuePair<DateTime, List<HealthActivity>> day in Model.Activities)
                             {
-                                var outString = string.Concat('"', day.Key, "\",");
+                                var outString = string.Concat('"', day.Key.ToShortDateString(), "\",");
                                 @Html.Raw(outString);
                             }
                         ],
@@ -130,7 +153,7 @@
                             label: '# of Steps',
                             data: [
                                 @{
-                                    foreach (KeyValuePair<string, List<HealthActivity>> day in Model.Activities)
+                                    foreach (KeyValuePair<DateTime, List<HealthActivity>> day in Model.Activities)
                                     {
                                         var stepCount = 0;
                                         foreach (HealthActivity ha in day.Value)
