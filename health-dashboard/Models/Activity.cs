@@ -1,11 +1,13 @@
-﻿namespace health_dashboard.Models
+﻿using System;
+
+namespace health_dashboard.Models
 {
     public class HealthActivity
     {
         public int id { get; set; }
         public string userId { get; set; }
-        public string startTimestamp { get; set; } // ISO8601 w/o Time Zone
-        public string endTimestamp { get; set; } // ISO8601 w/o Time Zone
+        public DateTime startTimestamp { get; set; }
+        public DateTime endTimestamp { get; set; }
         public string source { get; set; }
         public int activityTypeId { get; set; }
         public int caloriesBurnt { get; set; }

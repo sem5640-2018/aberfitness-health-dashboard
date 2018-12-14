@@ -93,19 +93,20 @@ namespace health_dashboard.Controllers
         public async Task<IActionResult> Index()
         {
 
-            IndexViewModel vm = new IndexViewModel();
-
-            vm.ActivityTypes = await GetHealthDataActivityTypes();
-            vm.Challenges = await GetGroupChallenges();
-            vm.ChallengeJoinUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage";
-            vm.Goals = await GetPersonalGoals();
+            IndexViewModel vm = new IndexViewModel
+            {
+                ActivityTypes = await GetHealthDataActivityTypes(),
+                Challenges = await GetGroupChallenges(),
+                ChallengeJoinUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage",
+                Goals = await GetPersonalGoals()
+            };
 
             // This may want to be a different method, if only the last month of data is desired
             DateTime today = DateTime.Today;
             DateTime weekAgo = DateTime.Today.AddDays(-7);
             List<HealthActivity> apiActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, weekAgo.ToString("yyyy-MM-dd"), today.ToString("yyyy-MM-dd"));
 
-            SortedDictionary<string, List<HealthActivity>> activitiesByDate = new SortedDictionary<string, List<HealthActivity>>();
+            SortedDictionary<DateTime, List<HealthActivity>> activitiesByDate = new SortedDictionary<DateTime, List<HealthActivity>>();
             /*
              *  activitiesByDate = [
              *      [date] => [
@@ -117,25 +118,27 @@ namespace health_dashboard.Controllers
 
             foreach (var a in apiActivities)
             {
-                DateTime startTime = DateTime.Parse(a.startTimestamp);
                 // Just date - not the time
-                if (!activitiesByDate.ContainsKey(startTime.ToShortDateString()))
+                if (!activitiesByDate.ContainsKey(a.startTimestamp.Date))
                 {
-                    activitiesByDate.Add(startTime.ToShortDateString(), new List<HealthActivity>());
+                    activitiesByDate.Add(
+                        a.startTimestamp.Date, 
+                        new List<HealthActivity>()
+                    );
                 }
 
-                activitiesByDate[startTime.ToShortDateString()].Add(a);
+                activitiesByDate[a.startTimestamp.Date].Add(a);
             }
 
             // Add a zero activity to the data shown by the graph for days with no activity data
             for (DateTime day = weekAgo; day <= today; day = day.AddDays(1)) {
-                if ( !activitiesByDate.ContainsKey(day.ToShortDateString()) )
+                if ( !activitiesByDate.ContainsKey(day.Date) )
                 {
                     activitiesByDate.Add(
-                        day.ToShortDateString(),
+                        day.Date,
                         new List<HealthActivity>()
                     );
-                    activitiesByDate[day.ToShortDateString()].Add(
+                    activitiesByDate[day.Date].Add(
                         new HealthActivity
                         {
                             caloriesBurnt = 0,
@@ -157,9 +160,10 @@ namespace health_dashboard.Controllers
 
         public async Task<IActionResult> Input()
         {
-            InputViewModel vm = new InputViewModel();
-
-            vm.ActivityTypes = await GetHealthDataActivityTypes();
+            InputViewModel vm = new InputViewModel
+            {
+                ActivityTypes = await GetHealthDataActivityTypes()
+            };
 
             if (Request.Method == "POST")
             {
@@ -480,7 +484,7 @@ namespace health_dashboard.Controllers
 
     public class IndexViewModel
     {
-        public SortedDictionary<string, List<HealthActivity>> Activities { get; set; }
+        public SortedDictionary<DateTime, List<HealthActivity>> Activities { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
         public List<UserChallenge> Challenges { get; set; }
         public string ChallengeJoinUrl { get; set; }
