@@ -103,11 +103,11 @@ namespace health_dashboard.Controllers
             // This may want to be a different method, if only the last month of data is desired
             DateTime today = DateTime.Today;
             DateTime weekAgo = DateTime.Today.AddDays(-7);
-            List<HealthActivity> api_activities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, weekAgo.ToString("yyyy-MM-dd"), today.ToString("yyyy-MM-dd"));
+            List<HealthActivity> apiActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, weekAgo.ToString("yyyy-MM-dd"), today.ToString("yyyy-MM-dd"));
 
-            Dictionary<string, List<HealthActivity>> activities_by_type = new Dictionary<string, List<HealthActivity>>();
+            SortedDictionary<string, List<HealthActivity>> activitiesByDate = new SortedDictionary<string, List<HealthActivity>>();
             /*
-             *  activities_by_type = [
+             *  activitiesByDate = [
              *      [date] => [
              *          HealthActivity,
              *      ],
@@ -115,21 +115,43 @@ namespace health_dashboard.Controllers
              *
              **/
 
-            foreach (var a in api_activities)
+            foreach (var a in apiActivities)
             {
                 DateTime startTime = DateTime.Parse(a.startTimestamp);
                 // Just date - not the time
-                if (!activities_by_type.ContainsKey(startTime.ToShortDateString()))
+                if (!activitiesByDate.ContainsKey(startTime.ToShortDateString()))
                 {
-                    activities_by_type.Add(startTime.ToShortDateString(), new List<HealthActivity>());
+                    activitiesByDate.Add(startTime.ToShortDateString(), new List<HealthActivity>());
                 }
 
-                activities_by_type[startTime.ToShortDateString()].Add(a);
+                activitiesByDate[startTime.ToShortDateString()].Add(a);
             }
 
-            vm.Activities = activities_by_type;
+            // Add a zero activity to the data shown by the graph for days with no activity data
+            for (DateTime day = weekAgo; day <= today; day = day.AddDays(1)) {
+                if ( !activitiesByDate.ContainsKey(day.ToShortDateString()) )
+                {
+                    activitiesByDate.Add(
+                        day.ToShortDateString(),
+                        new List<HealthActivity>()
+                    );
+                    activitiesByDate[day.ToShortDateString()].Add(
+                        new HealthActivity
+                        {
+                            caloriesBurnt = 0,
+                            averageHeartRate = 0,
+                            stepsTaken = 0,
+                            metresTravelled = 0,
+                            metresElevationGained = 0
+                        }
+                    );
+                }
+            }
+
+            vm.Activities = activitiesByDate;
 
             // There isn't current a different result if no challenge/activity data is found.
+            // Also, the graph's x axis is based on the order of the List, not the order of the x axis
             return View(vm);
         }
 
@@ -458,7 +480,7 @@ namespace health_dashboard.Controllers
 
     public class IndexViewModel
     {
-        public Dictionary<string, List<HealthActivity>> Activities { get; set; }
+        public SortedDictionary<string, List<HealthActivity>> Activities { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
         public List<UserChallenge> Challenges { get; set; }
         public string ChallengeJoinUrl { get; set; }
