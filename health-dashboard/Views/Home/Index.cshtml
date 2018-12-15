@@ -1,4 +1,12 @@
-﻿<div class="row">
+﻿@{
+    Dictionary<int, string> ActivityTypeStrings = new Dictionary<int, string>();
+    foreach (var at in Model.ActivityTypes)
+    {
+        ActivityTypeStrings.Add(at.Id, at.Name);
+    }
+}
+
+<div class="row">
     <div class="col-lg-12">
         <div class="card">
             <div class="card-body">
@@ -10,6 +18,16 @@
                 </div>
             </div>
             <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+                <canvas id="distanceChart"></canvas>
+            </div>
         </div>
     </div>
 </div>
@@ -28,22 +46,22 @@
                 {
                     if (at.Name == "Steps")
                     {
-                <form class="ajax-form-activity" method="post" action="#">
-                    <input type="hidden" name="start-time" value="@DateTime.Now.ToString("yyyy-MM-dd")">
-                    <input type="hidden" name="end-time" value="@DateTime.Now.ToString("yyyy-MM-dd")">
-                    <input type="hidden" name="activity-type" value="@at.Id">
-                    <div class="form-group">
-                        <label class="form-control-label" for="date">Date</label>
-                        <input class="form-control" type="date" id="date" value="@DateTime.Now.ToString("yyyy-MM-dd")">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="steps-taken">Number of Steps</label>
-                        <input class="form-control" type="number" id="steps-taken" name="steps-taken" min="0" step="1" required="required">
-                    </div>
-                    <div class="form-actions form-group">
-                        <button type="submit" class="btn btn-success btn-sm">Submit</button>
-                    </div>
-                </form>
+                        <form class="ajax-form-activity" method="post" action="#">
+                            <input type="hidden" name="start-time" value="@DateTime.Now.ToString("yyyy-MM-dd")">
+                            <input type="hidden" name="end-time" value="@DateTime.Now.ToString("yyyy-MM-dd")">
+                            <input type="hidden" name="activity-type" value="@at.Id">
+                            <div class="form-group">
+                                <label class="form-control-label" for="date">Date</label>
+                                <input class="form-control" type="date" id="date" value="@DateTime.Now.ToString("yyyy-MM-dd")">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-control-label" for="steps-taken">Number of Steps</label>
+                                <input class="form-control" type="number" id="steps-taken" name="steps-taken" min="0" step="1" required="required">
+                            </div>
+                            <div class="form-actions form-group">
+                                <button type="submit" class="btn btn-success btn-sm">Submit</button>
+                            </div>
+                        </form>
                         break; // out of foreach
                     }
                 }
@@ -133,35 +151,34 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.min.js" integrity="sha256-MZo5XY1Ah7Z2Aui4/alkfeiq3CopMdV/bbkc/Sh41+s=" crossorigin="anonymous"></script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.min.js" integrity="sha256-MZo5XY1Ah7Z2Aui4/alkfeiq3CopMdV/bbkc/Sh41+s=" crossorigin="anonymous"></script>
 <script>
     window.onload = function () {
         jQuery(document).ready(function () {
             (function () {
-                var ctx = jQuery("#stepsChart");
+                var ctx = document.getElementById("stepsChart");
+                ctx.height = 200;
                 var myChart = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: [
-                            @foreach (KeyValuePair<DateTime, List<HealthActivity>> day in Model.Activities)
+                            @foreach (KeyValuePair<DateTime, List<HealthActivity>> day in Model.ActivitiesByDate)
                             {
-                                var outString = string.Concat('"', day.Key.ToShortDateString(), "\",");
-                                @Html.Raw(outString);
+                                @Html.Raw(string.Concat('"', day.Key.ToShortDateString(), "\","));
                             }
                         ],
                         datasets: [{
                             label: '# of Steps',
                             data: [
                                 @{
-                                    foreach (KeyValuePair<DateTime, List<HealthActivity>> day in Model.Activities)
+                                    foreach (KeyValuePair<DateTime, List<HealthActivity>> day in Model.ActivitiesByDate)
                                     {
                                         var stepCount = 0;
                                         foreach (HealthActivity ha in day.Value)
                                         {
                                             stepCount += ha.stepsTaken;
                                         }
-                                        var outString = string.Concat(stepCount, ',');
-                                        @Html.Raw(outString);
+                                        @Html.Raw(string.Concat(stepCount, ','));
                                     }
                                 }
                             ],
@@ -175,6 +192,7 @@
                         }]
                     },
                     options: {
+                        maintainAspectRatio: false,
                         scales: {
                             yAxes: [{
                                 ticks: {
@@ -186,30 +204,96 @@
                 });
             })();
 
-            jQuery('form.ajax-form-activity').submit(function (event) {
-                event.preventDefault();
-                var form = jQuery('form.ajax-form-activity')
+            (function () {
+                var ctx = document.getElementById("distanceChart");
+                ctx.height = 100;
+                var myChart = new Chart(ctx, {
+                    type: 'horizontalBar',
+                    data: {
+                        labels: ["Distance (m)"],
 
-                if (/^[0-9.]*$/.exec( form.find('#steps-taken').val())) {
-                    var datetime = form.find('#date').val() + "T00:00:00";
-                    form.find('[name=start-time]').val(datetime);
-                    form.find('[name=end-time]').val(datetime);
+                        datasets: [
+                            @{ var rand = new Random();}
+                            @foreach (KeyValuePair<int, double> distance in Model.Distances)
+                            {
+                                @:{
+                                    @:data: [@distance.Value],
+                                    @:backgroundColor: "rgba(" + @rand.Next(0, 255) + "," + @rand.Next(0, 255) + "," + @rand.Next(0, 255) + ")",
+                                    @:label: "@ActivityTypeStrings[distance.Key]"
+                                @:},
+                            }
+                        ]
+                    },
 
-                    jQuery.ajax({
-                        type: 'POST',
-                        url: '@Url.Action("InputAjax", "Home")',
-                        data: form.serialize(),
-                        success: function (data, textStatus, jqXHR) {
-                            jQuery('.activity-form-message').html("<p>Steps recorded successfully.</p>");
+                    options: {
+                        maintainAspectRatio: false,
+                        tooltips: {
+                            enabled: false
                         },
-                        error: function (jqXHR, textStatus, errorThrown) {
-                            jQuery('.activity-form-message').html("<p>Steps save failed. Please contact a coordinator or an administrator.</p>");
-                        }
-                    });
-                } else {
-                    jQuery('.activity-form-message').html("<p>Steps Taken must be a number.</p>");
-                }
+                        hover: {
+                            animationDuration: 0
+                        },
+                        scales: {
+                            xAxes: [{
+                                ticks: {
+                                    beginAtZero: true,
+                                    fontFamily: "'Open Sans Bold', sans-serif",
+                                    fontSize: 11
+                                },
+                                scaleLabel: {
+                                    display: false
+                                },
+                                gridLines: {
+                                },
+                                stacked: true
+                            }],
+                            yAxes: [{
+                                gridLines: {
+                                    display: false,
+                                    color: "#fff",
+                                    zeroLineColor: "#fff",
+                                    zeroLineWidth: 0
+                                },
+                                ticks: {
+                                    fontFamily: "'Open Sans Bold', sans-serif",
+                                    fontSize: 11
+                                },
+                                stacked: true
+                            }]
+                        },
+
+                        pointLabelFontFamily: "Quadon Extra Bold",
+                        scaleFontFamily: "Quadon Extra Bold",
+                    }
+                });
+            })();
+
+            (function () {
+                jQuery('form.ajax-form-activity').submit(function (event) {
+                    event.preventDefault();
+                    var form = jQuery('form.ajax-form-activity')
+
+                    if (/^[0-9.]*$/.exec(form.find('#steps-taken').val())) {
+                        var datetime = form.find('#date').val() + "T00:00:00";
+                        form.find('[name=start-time]').val(datetime);
+                        form.find('[name=end-time]').val(datetime);
+
+                        jQuery.ajax({
+                            type: 'POST',
+                            url: '@Url.Action("InputAjax", "Home")',
+                            data: form.serialize(),
+                            success: function (data, textStatus, jqXHR) {
+                                jQuery('.activity-form-message').html("<p>Steps recorded successfully.</p>");
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                jQuery('.activity-form-message').html("<p>Steps save failed. Please contact a coordinator or an administrator.</p>");
+                            }
+                        });
+                    } else {
+                        jQuery('.activity-form-message').html("<p>Steps Taken must be a number.</p>");
+                    }
+                });
             });
-        });
+        })();
     };
 </script>
