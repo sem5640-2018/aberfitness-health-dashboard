@@ -82,7 +82,7 @@ namespace health_dashboard.Controllers
             IndexViewModel vm = new IndexViewModel
             {
                 ActivityTypes = await GetHealthDataActivityTypes(),
-                Challenges = await GetGroupChallenges(/*weekAgo, today*/),
+                Challenges = await GetGroupChallenges(weekAgo, today),
                 ChallengeJoinUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage",
                 Distances = new SortedDictionary<int, double>(),
                 Goals = await GetPersonalGoals(weekAgo, today),
@@ -407,24 +407,51 @@ namespace health_dashboard.Controllers
             return await Client.DeleteAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/" + id);
         }
 
-        private async Task<List<UserChallenge>> GetGroupChallenges()
+        private async Task<List<UserChallenge>> GetGroupChallenges(DateTime? from = null, DateTime? to = null)
         {
+            if (from == null ^ to == null)
+            {
+                throw new ArgumentException("Either both or neither 'from' and 'to' dates must be specified.");
+            }
+
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/getGroup/" + userId);
-            return await response.Content.ReadAsAsync<List<UserChallenge>>();
+            if (response.IsSuccessStatusCode)
+            {
+                List<UserChallenge> apiChallenges = await response.Content.ReadAsAsync<List<UserChallenge>>();
+
+                List<UserChallenge> challenges = new List<UserChallenge>();
+                foreach (var challenge in apiChallenges)
+                {
+                    if (challenge.challenge.startDateTime <= DateTime.Now && DateTime.Now < challenge.challenge.endDateTime)
+                    {
+                        challenges.Add(challenge);
+                    }
+                }
+                return challenges;
+            }
+            return null;
         }
 
         private async Task<List<ActivityType>> GetHealthDataActivityTypes()
         {
             var response = await Client.GetAsync(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/ActivityTypes");
-            return await response.Content.ReadAsAsync<List<ActivityType>>();
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsAsync<List<ActivityType>>();
+            }
+            return null;
         }
 
-        private async Task<bool> GetIsFitbitConnected()
+        private async Task<bool?> GetIsFitbitConnected()
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             var response = await Client.GetAsync(AppConfig.GetValue<string>("FitBitIngestServiceUrl") + "api/Check?userId=" + userId);
-            return (int) response.StatusCode == 200;
+            if (response.IsSuccessStatusCode)
+            {
+                return (int)response.StatusCode == 200;
+            }
+            return null;
         }
 
         private async Task<List<UserChallenge>> GetPersonalGoals(DateTime? from = null, DateTime? to = null)
@@ -436,17 +463,21 @@ namespace health_dashboard.Controllers
 
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/getPersonal/" + userId);
-            List<UserChallenge> apiGoals = await response.Content.ReadAsAsync<List<UserChallenge>>();
-
-            List<UserChallenge> goals = new List<UserChallenge>();
-            foreach (var goal in apiGoals)
+            if (response.IsSuccessStatusCode)
             {
-                if ( goal.challenge.startDateTime <= DateTime.Now && DateTime.Now < goal.challenge.endDateTime )
+                List<UserChallenge> apiGoals = await response.Content.ReadAsAsync<List<UserChallenge>>();
+
+                List<UserChallenge> goals = new List<UserChallenge>();
+                foreach (var goal in apiGoals)
                 {
-                    goals.Add(goal);
+                    if (goal.challenge.startDateTime <= DateTime.Now && DateTime.Now < goal.challenge.endDateTime)
+                    {
+                        goals.Add(goal);
+                    }
                 }
+                return goals;
             }
-            return goals;
+            return null;
         }
 
         private async Task<List<HealthActivity>> GetUserActivities(string userId, DateTime? from = null, DateTime? to = null)
@@ -463,40 +494,63 @@ namespace health_dashboard.Controllers
             }
 
             var response = await Client.GetAsync(path);
-            return await response.Content.ReadAsAsync<List<HealthActivity>>();
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsAsync<List<HealthActivity>>();
+            }
+            return null;
 
         }
         
         private async Task<List<Group>> GetUserGroups()
         {
             var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/");
-            return await response.Content.ReadAsAsync<List<Group>>();
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsAsync<List<Group>>();
+            }
+            return null;
         }
         
         private async Task<GroupWithMembers> GetUserGroupWithMembers(int groupId)
         {
             var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/" + groupId);
-            return await response.Content.ReadAsAsync<GroupWithMembers>();
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsAsync<GroupWithMembers>();
+            }
+            return null;
         }
 
         private async Task<List<ChallengeActivityType>> GetValidChallengeActivityTypes()
         {
             var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/activities");
-            return await response.Content.ReadAsAsync<List<ChallengeActivityType>>();
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsAsync<List<ChallengeActivityType>>();
+            }
+            return null;
         }
 
         private async Task<List<GoalMetric>> GetGoalMetrics()
         {
             var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/goalMetric");
-            return await response.Content.ReadAsAsync<List<GoalMetric>>();
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsAsync<List<GoalMetric>>();
+            }
+            return null;
         }
         
         private async Task<GroupWithMembers> GetGroupOfCurrentUser()
         {
-
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             var response = await Client.GetAsync(AppConfig.GetValue<string>("UserGroupsUrl") + "api/Groups/ForUser/" + userId);
-            return await response.Content.ReadAsAsync<GroupWithMembers>();
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsAsync<GroupWithMembers>();
+            }
+            return null;
         }
 
         private async Task<HttpResponseMessage> PostFormActivity()
@@ -556,7 +610,7 @@ namespace health_dashboard.Controllers
         public List<UserChallenge> Challenges { get; set; }
         public string ChallengeJoinUrl { get; set; }
         public List<UserChallenge> Goals { get; set; }
-        public bool IsFitBitConnected { get; set; }
+        public bool? IsFitBitConnected { get; set; }
         public string FitBitConnectUrl { get; set; }
         public string FitBitDisconnectUrl { get; set; }
     }
