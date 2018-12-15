@@ -233,16 +233,8 @@ namespace health_dashboard.Controllers
             string[] goalMetricStringArray = goalMetricStringsList.ToArray();
 
             List<ActivityType> activityTypes = await GetHealthDataActivityTypes();
-
-            int totalActivityKey = activityTypeDict.Last().Key + 1;
-            activityTypeDict.TryAdd(totalActivityKey, "All (Total)");
-            activityOccurences.TryAdd(totalActivityKey, 0);
-
-
-            if (groupWithMembers != null)
+            if ( activityTypes != null )
             {
-                vm.HealthDataRepositoryConnectionSuccessful = true;
-
                 // activityOccurences will store how many instances of a certain type of activity are present in the database
                 Dictionary<int, int> activityOccurences = new Dictionary<int, int>();
                 Dictionary<int, string> activityTypeDict = new Dictionary<int, string>();
@@ -253,29 +245,35 @@ namespace health_dashboard.Controllers
                     activityOccurences.Add(type.Id, 0);
                 }
 
+                int totalActivityKey = activityTypeDict.Last().Key + 1;
+                activityTypeDict.TryAdd(totalActivityKey, "All (Total)");
+                activityOccurences.TryAdd(totalActivityKey, 0);
+
+
                 if (groupWithMembers != null)
                 {
                     if (activityTypes.Count > 0)
                     {
                         for (int i = 0; i < groupWithMembers.Members.Length; i++)
                         {
-                            // append extra activity to each user's list of activities which contains combined total of all user's activities
-                            HealthActivity healthActivityTotal = new HealthActivity
+                            userActivities = await GetUserActivities(groupWithMembers.Members[i].UserId);
+                            if (userActivities.Count > 0)
                             {
-                                activityTypeId = totalActivityKey,
-                                id = 0,
-                                userId = groupWithMembers.Members[i].UserId,
-                                averageHeartRate = 0,
-                                caloriesBurnt = 0,
-                                stepsTaken = 0,
-                                metresElevationGained = 0,
-                                metresTravelled = 0,
-                                startTimestamp = DateTime.Today,
-                                endTimestamp = DateTime.Today.AddDays(1),
-                                source = "Manual",
-                            };
-                            foreach (HealthActivity ha in userActivities)
-                            {
+                                // append extra activity to each user's list of activities which contains combined total of all user's activities
+                                HealthActivity healthActivityTotal = new HealthActivity
+                                {
+                                    activityTypeId = totalActivityKey,
+                                    id = 0,
+                                    userId = groupWithMembers.Members[i].UserId,
+                                    averageHeartRate = 0,
+                                    caloriesBurnt = 0,
+                                    stepsTaken = 0,
+                                    metresElevationGained = 0,
+                                    metresTravelled = 0,
+                                    startTimestamp = DateTime.Today,
+                                    endTimestamp = DateTime.Today.AddDays(1),
+                                    source = "Manual",
+                                };
                                 foreach (HealthActivity ha in userActivities)
                                 {
                                     activityAlreadyAdded = false;
@@ -293,18 +291,21 @@ namespace health_dashboard.Controllers
                                         }
                                         hac.metresElevationGained = Math.Max(0, hac.metresElevationGained);
                                     }
+                                    healthActivityTotal.caloriesBurnt += ha.caloriesBurnt;
+                                    healthActivityTotal.metresTravelled += ha.metresTravelled;
+                                    healthActivityTotal.stepsTaken += ha.stepsTaken;
+                                    healthActivityTotal.metresElevationGained += ha.metresElevationGained;
                                     if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
                                     activityOccurences[ha.activityTypeId]++;
                                 }
-                                healthActivityTotal.caloriesBurnt += ha.caloriesBurnt;
-                                healthActivityTotal.metresTravelled += ha.metresTravelled;
-                                healthActivityTotal.stepsTaken += ha.stepsTaken;
-                                healthActivityTotal.metresElevationGained += ha.metresElevationGained;
-                                if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
-                                activityOccurences[ha.activityTypeId]++;
+                                activityOccurences[totalActivityKey] = 1;
+                                userActivitiesCombined.Add(healthActivityTotal);
                             }
-                            activityOccurences[totalActivityKey] = 1;
-                            userActivitiesCombined.Add(healthActivityTotal);
+                            else
+                            {
+                                vm.Message = "Nobody in your group currently has any activity data, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some</a>?";
+                                renderTables = false;
+                            }
                         }
                         foreach (KeyValuePair<int, int> entry in activityOccurences)
                         {
@@ -351,19 +352,13 @@ namespace health_dashboard.Controllers
                     vm.Message = "You aren't currently a member of a group. Would you like to <a href=" + AppConfig.GetValue<string>("UserGroupsUrl") + ">join one</a>?";
                     vm.RenderTables = false;
                 }
+
+                vm.HealthDataRepositoryConnectionSuccessful = true;
             } else
             {
                 vm.HealthDataRepositoryConnectionSuccessful = false;
             }
 
-            // controller: 
-            // 1. get the group the current user is in
-            // 2. get every member of the group
-            // 3. get activity and goal metric data for each group member
-            // view: 
-            // 4. get desired activity and goal metric from data
-            // 5. get total of data per person
-            // 6. rank group members by total
             return View(vm);
         }
 
