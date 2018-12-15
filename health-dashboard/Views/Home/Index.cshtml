@@ -25,10 +25,26 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-lg-10">
             <div class="card">
                 <div class="card-body">
                     <canvas id="distanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2">
+            <div class="card">
+                <div class="card-body">
+                    <div style="height: 100px">
+                        @if (!Model.IsFitBitConnected)
+                        {
+                            <a href="@Model.FitBitConnectUrl" style="white-space: normal;" class="btn btn-success align-middle">Connect your FitBit</a>
+                        } else
+                        {
+                            <a href="@Model.FitBitDisconnectUrl" style="white-space: normal;" class="btn btn-success align-middle">Disconnect your FitBit</a>
+                            <p>This may take up to an hour to update.</p>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
