@@ -43,7 +43,7 @@ namespace health_dashboard.Controllers
                 var response = await PostFormGoal();
 
                 // Add success / failure message
-                if ( response.IsSuccessStatusCode )
+                if (response.IsSuccessStatusCode)
                 {
                     vm.Message = "Goal save successful.";
                 }
@@ -85,10 +85,13 @@ namespace health_dashboard.Controllers
                 Challenges = await GetGroupChallenges(/*weekAgo, today*/),
                 ChallengeJoinUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage",
                 Distances = new SortedDictionary<int, double>(),
-                Goals = await GetPersonalGoals(weekAgo, today)
+                Goals = await GetPersonalGoals(weekAgo, today),
+                IsFitBitConnected = await GetIsFitbitConnected(),
+                FitBitConnectUrl = AppConfig.GetValue<string>("FitBitIngestServiceUrl") + "LoginPage",
+                FitBitDisconnectUrl = "https://www.fitbit.com/settings/applications",
             };
 
-            if ( vm.ActivityTypes == null )
+            if (vm.ActivityTypes == null)
             {
                 vm.HealthDataRepositoryConnectionSuccessful = false;
             } else
@@ -122,7 +125,7 @@ namespace health_dashboard.Controllers
                     if (!activitiesByDate.ContainsKey(a.startTimestamp.Date))
                     {
                         activitiesByDate.Add(
-                            a.startTimestamp.Date, 
+                            a.startTimestamp.Date,
                             new List<HealthActivity>()
                         );
                     }
@@ -132,7 +135,7 @@ namespace health_dashboard.Controllers
 
                 // Add a zero activity to the data shown by the graph for days with no activity data
                 for (DateTime day = weekAgo; day <= today; day = day.AddDays(1)) {
-                    if ( !activitiesByDate.ContainsKey(day.Date) )
+                    if (!activitiesByDate.ContainsKey(day.Date))
                     {
                         activitiesByDate.Add(
                             day.Date,
@@ -155,7 +158,7 @@ namespace health_dashboard.Controllers
 
                 vm.ChallengesConnectionSuccessful = vm.Challenges != null;
             }
-            
+
             return View(vm);
         }
 
@@ -217,7 +220,7 @@ namespace health_dashboard.Controllers
             string[] goalMetricStringArray = goalMetricStringsList.ToArray();
 
             List<ActivityType> activityTypes = await GetHealthDataActivityTypes();
-            if ( activityTypes != null )
+            if (activityTypes != null)
             {
                 // activityOccurences will store how many instances of a certain type of activity are present in the database
                 Dictionary<int, int> activityOccurences = new Dictionary<int, int>();
@@ -417,6 +420,13 @@ namespace health_dashboard.Controllers
             return await response.Content.ReadAsAsync<List<ActivityType>>();
         }
 
+        private async Task<bool> GetIsFitbitConnected()
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+            var response = await Client.GetAsync(AppConfig.GetValue<string>("FitBitIngestServiceUrl") + "api/Check?userId=" + userId);
+            return (int) response.StatusCode == 200;
+        }
+
         private async Task<List<UserChallenge>> GetPersonalGoals(DateTime? from = null, DateTime? to = null)
         {
             if (from == null ^ to == null)
@@ -546,6 +556,9 @@ namespace health_dashboard.Controllers
         public List<UserChallenge> Challenges { get; set; }
         public string ChallengeJoinUrl { get; set; }
         public List<UserChallenge> Goals { get; set; }
+        public bool IsFitBitConnected { get; set; }
+        public string FitBitConnectUrl { get; set; }
+        public string FitBitDisconnectUrl { get; set; }
     }
 
     public class InputViewModel
