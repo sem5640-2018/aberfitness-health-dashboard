@@ -98,9 +98,20 @@ namespace health_dashboard.Controllers
                 ActivityTypes = await GetHealthDataActivityTypes(),
                 Challenges = await GetGroupChallenges(),
                 ChallengeJoinUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage",
+                Distances = new SortedDictionary<int, double>(),
                 Goals = await GetPersonalGoals()
             };
 
+            List<HealthActivity> allActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+            foreach (HealthActivity ha in allActivities)
+            {
+                if (!vm.Distances.ContainsKey(ha.activityTypeId))
+                {
+                    vm.Distances.Add(ha.activityTypeId, 0);
+                }
+                vm.Distances[ha.activityTypeId] += ha.metresTravelled;
+            }
+                                    
             // This may want to be a different method, if only the last month of data is desired
             DateTime today = DateTime.Today;
             DateTime weekAgo = DateTime.Today.AddDays(-7);
@@ -151,7 +162,7 @@ namespace health_dashboard.Controllers
                 }
             }
 
-            vm.Activities = activitiesByDate;
+            vm.ActivitiesByDate = activitiesByDate;
 
             // There isn't current a different result if no challenge/activity data is found.
             // Also, the graph's x axis is based on the order of the List, not the order of the x axis
@@ -475,8 +486,8 @@ namespace health_dashboard.Controllers
                 caloriesBurnt = StringValues.IsNullOrEmpty(Request.Form["calories-burnt"]) ? 0 : int.Parse(Request.Form["calories-burnt"]),
                 averageHeartRate = StringValues.IsNullOrEmpty(Request.Form["average-heart-rate"]) ? 0 : int.Parse(Request.Form["average-heart-rate"]),
                 stepsTaken = StringValues.IsNullOrEmpty(Request.Form["steps-taken"]) ? 0 : int.Parse(Request.Form["steps-taken"]),
-                metresTravelled = StringValues.IsNullOrEmpty(Request.Form["metres-travelled"]) ? 0 : int.Parse(Request.Form["metres-travelled"]),
-                metresElevationGained = StringValues.IsNullOrEmpty(Request.Form["metres-elevation-gained"]) ? 0 : int.Parse(Request.Form["metres-elevation-gained"])
+                metresTravelled = StringValues.IsNullOrEmpty(Request.Form["metres-travelled"]) ? 0 : double.Parse(Request.Form["metres-travelled"]),
+                metresElevationGained = StringValues.IsNullOrEmpty(Request.Form["metres-elevation-gained"]) ? 0 : double.Parse(Request.Form["metres-elevation-gained"])
             };
 
             return await Client.PostAsync<object>(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "/api/activities", activity);
@@ -491,7 +502,7 @@ namespace health_dashboard.Controllers
                 {
                     startDateTime = DateTime.Parse(Request.Form["start-time"]),
                     endDateTime = DateTime.Parse(Request.Form["end-time"]),
-                    goal = int.Parse(Request.Form["target"]),
+                    goal = double.Parse(Request.Form["target"]),
                     GoalMetricId = int.Parse(Request.Form["goal-metric"]),
                     activityId = int.Parse(Request.Form["activity-type"]),
                 },
@@ -510,7 +521,8 @@ namespace health_dashboard.Controllers
 
     public class IndexViewModel
     {
-        public SortedDictionary<DateTime, List<HealthActivity>> Activities { get; set; }
+        public SortedDictionary<DateTime, List<HealthActivity>> ActivitiesByDate { get; set; }
+        public SortedDictionary<int, double> Distances { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
         public List<UserChallenge> Challenges { get; set; }
         public string ChallengeJoinUrl { get; set; }
