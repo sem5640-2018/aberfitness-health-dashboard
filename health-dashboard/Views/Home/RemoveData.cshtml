@@ -1,0 +1,109 @@
+﻿@using System.Globalization;
+@using X.PagedList.Mvc.Common;
+@using X.PagedList.Mvc.Core;
+@using X.PagedList.Mvc;
+@using X.PagedList;
+
+@{
+    ViewData["Title"] = "Remove Data";
+}
+
+@if (Model.HealthDataRepositoryConnectionSuccessful)
+{
+    Dictionary<int, string> ActivityTypeStrings = new Dictionary<int, string>();
+    if (Model.RenderTable)
+    {
+        foreach (var at in Model.ActivityTypes)
+        {
+            ActivityTypeStrings.Add(at.Id, at.Name);
+        }
+    }
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="box-title">Your Activities</h2>
+                </div>
+                <div class="card-body">
+                    @if (Model.RenderTable)
+                    {
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Activity Type</th>
+                                    <th>Time Period</th>
+                                    <th>Calories Burnt</th>
+                                    <th>Average Heart Rate</th>
+                                    <th>Steps Taken</th>
+                                    <th>Metres Travelled</th>
+                                    <th>Elevation Gained (metres)</th>
+                                    <th>Remove Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var a in Model.Activities)
+                                {
+                                    <tr>
+                                        <td>@ActivityTypeStrings[a.activityTypeId]</td>
+                                        <td>
+                                            @a.startTimestamp.ToString()<br />
+                                            @a.endTimestamp.ToString()
+                                        </td>
+                                        <td>@a.caloriesBurnt</td>
+                                        <td>@a.averageHeartRate</td>
+                                        <td>@a.stepsTaken</td>
+                                        <td>@a.metresTravelled</td>
+                                        <td>@a.metresElevationGained</td>
+                                        <td><div class="activity-delete-message" data-id="@a.id"><a href="#" class="activity-delete-ajax" data-id="@a.id">Delete</a></div></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        @Html.PagedListPager((IPagedList)Model.Activities, page => Url.Action("RemoveData", new { page }))
+                    }
+                    else
+                    {
+                        <div>@Html.Raw(Model.Message)</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    window.onload = function () {
+        jQuery(document).ready(function () {
+            jQuery('.activity-delete-ajax').click(function (event) {
+                if (window.confirm("Are you sure you wish to delete that activity record?")) {
+                    event.preventDefault();
+                    var link = jQuery(this);
+
+                    jQuery.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("RemoveDataAjax", "Home")' + '/' + link.data("id"),
+                        success: function (data, textStatus, jqXHR) {
+                            jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Activity deleted successfully.</p>");
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            jQuery('.activity-delete-message[data-id=' + link.data("id") + ']').html("<p>Deletion failed.</p>");
+                        }
+                    });
+                }
+            });
+        });
+    };
+    </script>
+}
+else
+{
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3>Apologies, but the Health Dashboard is currently unavailable.</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+}
