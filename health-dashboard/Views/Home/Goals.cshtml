@@ -1,5 +1,9 @@
 ﻿@using System.Globalization;
 
+@{
+    ViewData["Title"] = "Your Goals";
+}
+
 @if (Model.HealthDataRepositoryConnectionSuccessful)
 {
     <div class="row">
@@ -134,7 +138,8 @@
         });
     };
     </script>
-} else
+}
+else
 {
     <div class="row">
         <div class="col-lg-12">

@@ -4,6 +4,10 @@
 @using X.PagedList.Mvc;
 @using X.PagedList;
 
+@{
+    ViewData["Title"] = "Rankings";
+}
+
 @if (Model.HealthDataRepositoryConnectionSuccessful)
 {
     <div class="row">
@@ -102,7 +106,8 @@
     }
     </script>
 
-} else
+}
+else
 {
     <div class="row">
         <div class="col-lg-12">
