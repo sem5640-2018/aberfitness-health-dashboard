@@ -460,8 +460,8 @@ namespace health_dashboard.Controllers
                 caloriesBurnt = StringValues.IsNullOrEmpty(Request.Form["calories-burnt"]) ? 0 : int.Parse(Request.Form["calories-burnt"]),
                 averageHeartRate = StringValues.IsNullOrEmpty(Request.Form["average-heart-rate"]) ? 0 : int.Parse(Request.Form["average-heart-rate"]),
                 stepsTaken = StringValues.IsNullOrEmpty(Request.Form["steps-taken"]) ? 0 : int.Parse(Request.Form["steps-taken"]),
-                metresTravelled = StringValues.IsNullOrEmpty(Request.Form["metres-travelled"]) ? 0 : int.Parse(Request.Form["metres-travelled"]),
-                metresElevationGained = StringValues.IsNullOrEmpty(Request.Form["metres-elevation-gained"]) ? 0 : int.Parse(Request.Form["metres-elevation-gained"])
+                metresTravelled = StringValues.IsNullOrEmpty(Request.Form["metres-travelled"]) ? 0 : double.Parse(Request.Form["metres-travelled"]),
+                metresElevationGained = StringValues.IsNullOrEmpty(Request.Form["metres-elevation-gained"]) ? 0 : double.Parse(Request.Form["metres-elevation-gained"])
             };
 
             return await Client.PostAsync<object>(AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "/api/activities", activity);
@@ -476,7 +476,7 @@ namespace health_dashboard.Controllers
                 {
                     startDateTime = DateTime.Parse(Request.Form["start-time"]),
                     endDateTime = DateTime.Parse(Request.Form["end-time"]),
-                    goal = int.Parse(Request.Form["target"]),
+                    goal = double.Parse(Request.Form["target"]),
                     GoalMetricId = int.Parse(Request.Form["goal-metric"]),
                     activityId = int.Parse(Request.Form["activity-type"]),
                 },
