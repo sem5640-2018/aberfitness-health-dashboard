@@ -309,7 +309,10 @@
                                 url: '@Url.Action("InputAjax", "Home")',
                                 data: form.serialize(),
                                 success: function (data, textStatus, jqXHR) {
-                                    jQuery('.activity-form-message').html("<p>Steps recorded successfully.</p>");
+                                    jQuery('.activity-form-message').html("<p>Steps recorded successfully. Refreshing the page...</p>");
+                                    setTimeout(function () {
+                                        window.location.reload();
+                                    }, 2500);
                                 },
                                 error: function (jqXHR, textStatus, errorThrown) {
                                     jQuery('.activity-form-message').html("<p>Steps save failed. Please contact a coordinator or an administrator.</p>");
