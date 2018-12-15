@@ -72,28 +72,33 @@
     {
         @:function updateActivityAndMetric() {
             @:var goalMetricTypes = [];
+            @:var activityTypes = [];
 
             @foreach(var g in Model.GoalMetrics)
             {
                 @:goalMetricTypes.push("@g");
             }
-            @:var selectedActivityId = document.getElementById("activityTypeDDL").selectedIndex + 1;
-            @:var selectedMetricId = document.getElementById("metricTypeDDL").selectedIndex;
+            @foreach (KeyValuePair<int, string> at in Model.ActivityTypeDict)
+            {
+                @:activityTypes.push("@at.Key");
+            }
+            @:var selectedActivityIndex = document.getElementById("activityTypeDDL").selectedIndex;
+            @:var selectedActivityId = activityTypes[selectedActivityIndex];
+            @:var selectedMetricIndex = document.getElementById("metricTypeDDL").selectedIndex;
             @:var activityCount = @Model.ActivityTypeDict.Count;
             @:var metricCount = @Model.GoalMetrics.Length;
-            @:var goalMetricId = "metric-";
-            @:var activityId = "activity-";
+            @:var goalMetricId = "";
+            @:var activityId = "";
             @:for (j = 0; j < metricCount; j++) {
-                @:for (i = 1; i < activityCount + 1; i++) {
-                    @:goalMetricId = "metric-" + goalMetricTypes[j]
-                    @:activityId = "activity-" + i
+                @:for (i = 0; i < activityCount; i++) {
+                    @:goalMetricId = "metric-" + goalMetricTypes[j];
+                    @:activityId = "activity-" + activityTypes[i];
                     @:var activityMetricTable = document.getElementById(activityId + "-" + goalMetricId);
-
-                    @:activityMetricTable.hidden = !(j == selectedMetricId && i == selectedActivityId);
+                    @:activityMetricTable.hidden = !(j == selectedMetricIndex && i == selectedActivityIndex);
                 @:}
             @:}
-            @:updateActivityAndMetric();
         @:}
+        @:updateActivityAndMetric();
     }
     </script>
 

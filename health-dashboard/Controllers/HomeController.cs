@@ -234,7 +234,12 @@ namespace health_dashboard.Controllers
 
             List<ActivityType> activityTypes = await GetHealthDataActivityTypes();
 
-            if (activityTypes != null)
+            int totalActivityKey = activityTypeDict.Last().Key + 1;
+            activityTypeDict.TryAdd(totalActivityKey, "All (Total)");
+            activityOccurences.TryAdd(totalActivityKey, 0);
+
+
+            if (groupWithMembers != null)
             {
                 vm.HealthDataRepositoryConnectionSuccessful = true;
 
@@ -254,8 +259,22 @@ namespace health_dashboard.Controllers
                     {
                         for (int i = 0; i < groupWithMembers.Members.Length; i++)
                         {
-                            userActivities = await GetUserActivities(groupWithMembers.Members[i].UserId);
-                            if (userActivities.Count > 0)
+                            // append extra activity to each user's list of activities which contains combined total of all user's activities
+                            HealthActivity healthActivityTotal = new HealthActivity
+                            {
+                                activityTypeId = totalActivityKey,
+                                id = 0,
+                                userId = groupWithMembers.Members[i].UserId,
+                                averageHeartRate = 0,
+                                caloriesBurnt = 0,
+                                stepsTaken = 0,
+                                metresElevationGained = 0,
+                                metresTravelled = 0,
+                                startTimestamp = DateTime.Today,
+                                endTimestamp = DateTime.Today.AddDays(1),
+                                source = "Manual",
+                            };
+                            foreach (HealthActivity ha in userActivities)
                             {
                                 foreach (HealthActivity ha in userActivities)
                                 {
@@ -277,12 +296,15 @@ namespace health_dashboard.Controllers
                                     if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
                                     activityOccurences[ha.activityTypeId]++;
                                 }
+                                healthActivityTotal.caloriesBurnt += ha.caloriesBurnt;
+                                healthActivityTotal.metresTravelled += ha.metresTravelled;
+                                healthActivityTotal.stepsTaken += ha.stepsTaken;
+                                healthActivityTotal.metresElevationGained += ha.metresElevationGained;
+                                if (!activityAlreadyAdded) { userActivitiesCombined.Add(ha); }
+                                activityOccurences[ha.activityTypeId]++;
                             }
-                            else
-                            {
-                                vm.Message = "Nobody in your group currently has any activity data, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some</a>?";
-                                renderTables = false;
-                            }
+                            activityOccurences[totalActivityKey] = 1;
+                            userActivitiesCombined.Add(healthActivityTotal);
                         }
                         foreach (KeyValuePair<int, int> entry in activityOccurences)
                         {
