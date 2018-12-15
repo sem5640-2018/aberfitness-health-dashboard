@@ -34,22 +34,6 @@ namespace health_dashboard.Controllers
             Client = client;
         }
 
-        [Authorize("Administrator")]
-        public IActionResult Admin()
-        {
-            // TODO Implement "Administrative Interface for managing users"
-            /*
-             * Within the context of this microservice, this should only require
-             * deleting data à la the RemoveData() action.
-             * Views should be reusable, just needs a parameter adding for the
-             * user that the admin would like to remove the data for.
-             *
-             * If we need the admin to be able to edit the data, then it's going
-             * to requre a little more work.
-             */
-            return View();
-        }
-        
         public async Task<IActionResult> Goals()
         {
             GoalsViewModel vm = new GoalsViewModel();
