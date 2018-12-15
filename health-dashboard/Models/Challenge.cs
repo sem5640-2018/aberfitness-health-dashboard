@@ -7,7 +7,7 @@ namespace health_dashboard.Models
         public int? challengeId { get; set; }
         public DateTime startDateTime { get; set; }
         public DateTime endDateTime { get; set; }
-        public int goal { get; set; }
+        public double goal { get; set; }
         public GoalMetric GoalMetric { get; set; }
         public int GoalMetricId { get; set; }
         public int activityId { get; set; }
