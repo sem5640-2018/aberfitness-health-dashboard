@@ -1,108 +1,110 @@
 ﻿@using System.Globalization;
 
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card">
-            <div class="card-body">
-                <h1 class="box-title">Add a Personal Goal</h1>
-            </div>
-            <div class="card-body">
-                <div class="message-box">
-                    @if (Model.Message != null)
-                    {
-                        @Model.Message
-                    }
+@if (Model.HealthDataRepositoryConnectionSuccessful)
+{
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="box-title">Add a Personal Goal</h1>
                 </div>
-                <form method="post" action="#">
-                    <div class="form-group">
-                        <label class="form-control-label" for="activity-type">
-                            Activity Type<span class="required">*</span>
-                        </label>
-                        <select id="activity-type" name="activity-type" class="form-control" required="required">
-                            <option value="" label="Choose an Activity Type..."></option>
-                            @foreach (var at in Model.ActivityTypes)
-                            {
-                                <option value="@at.activityId">@at.activityName</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="target">
-                            Target<span class="required">*</span>
-                        </label>
-                        <input type="number" id="target" name="target" class="form-control" step="0.001" value="0">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label">
-                            Goal Metric<span class="required">*</span>
-                        </label>
-                        <select id="goal-metric" name="goal-metric" class="form-control" required="required">
-                            <option value="" label="Choose a Goal Metric..."></option>
-                            @foreach (var gm in Model.GoalMetrics)
-                            {
-                                <option value="@gm.GoalMetricId" label="@gm.GoalMetricDisplay"></option>
-                            }
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="start-time">
-                            Start Time<span class="required">*</span>
-                        </label>
-                        <input type="datetime-local" id="start-time" name="start-time" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-control-label" for="end-time">
-                            End Time<span class="required">*</span>
-                        </label>
-                        <input type="datetime-local" id="end-time" name="end-time" class="form-control" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
-                    </div>
-                    <div class="ln_solid"></div>
-                    <div class="form-group">
-                        <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-5">
-                            <button type="submit" class="btn btn-success">Submit</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card">
-            <div class="card-body">
-                <h2 class="box-title">Your Goals</h2>
-            </div>
-            <div class="card-body">
-                <table id="datatable" class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Activity Type</th>
-                            <th>Amount Completed</th>
-                            <th>Required</th>
-                            <th>Time Period</th>
-                            <th>Delete Goal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var g in Model.Goals)
+                <div class="card-body">
+                    <div class="message-box">
+                        @if (Model.Message != null)
                         {
-                            <tr>
-                                <td>@g.challenge.activity.activityName</td>
-                                <td>@(Math.Floor((double)((int)g.challenge.goal * (int)g.percentageComplete / 100))) @g.challenge.GoalMetric.GoalMetricDisplay</td>
-                                <td>@g.challenge.goal @g.challenge.GoalMetric.GoalMetricDisplay</td>
-                                <td>@g.challenge.startDateTime - @g.challenge.endDateTime</td>
-                                <td><div class="goal-delete-message" data-id="@g.userChallengeId"><a href="#" class="goal-delete-ajax" data-id="@g.userChallengeId">Delete</a></div></td>
-                            </tr>
+                            @Model.Message
                         }
-                    </tbody>
-                </table>
+                    </div>
+                    <form method="post" action="#">
+                        <div class="form-group">
+                            <label class="form-control-label" for="activity-type">
+                                Activity Type<span class="required">*</span>
+                            </label>
+                            <select id="activity-type" name="activity-type" class="form-control" required="required">
+                                <option value="" label="Choose an Activity Type..."></option>
+                                @foreach (var at in Model.ActivityTypes)
+                                {
+                                    <option value="@at.activityId">@at.activityName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="target">
+                                Target<span class="required">*</span>
+                            </label>
+                            <input type="number" id="target" name="target" class="form-control" step="0.001" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label">
+                                Goal Metric<span class="required">*</span>
+                            </label>
+                            <select id="goal-metric" name="goal-metric" class="form-control" required="required">
+                                <option value="" label="Choose a Goal Metric..."></option>
+                                @foreach (var gm in Model.GoalMetrics)
+                                {
+                                    <option value="@gm.GoalMetricId" label="@gm.GoalMetricDisplay"></option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="start-time">
+                                Start Time<span class="required">*</span>
+                            </label>
+                            <input type="datetime-local" id="start-time" name="start-time" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-control-label" for="end-time">
+                                End Time<span class="required">*</span>
+                            </label>
+                            <input type="datetime-local" id="end-time" name="end-time" class="form-control" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm:ss")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")">
+                        </div>
+                        <div class="ln_solid"></div>
+                        <div class="form-group">
+                            <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-5">
+                                <button type="submit" class="btn btn-success">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="box-title">Your Goals</h2>
+                </div>
+                <div class="card-body">
+                    <table id="datatable" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Activity Type</th>
+                                <th>Amount Completed</th>
+                                <th>Required</th>
+                                <th>Time Period</th>
+                                <th>Delete Goal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var g in Model.Goals)
+                            {
+                                <tr>
+                                    <td>@g.challenge.activity.activityName</td>
+                                    <td>@(Math.Floor((double)((int)g.challenge.goal * (int)g.percentageComplete / 100))) @g.challenge.GoalMetric.GoalMetricDisplay</td>
+                                    <td>@g.challenge.goal @g.challenge.GoalMetric.GoalMetricDisplay</td>
+                                    <td>@g.challenge.startDateTime - @g.challenge.endDateTime</td>
+                                    <td><div class="goal-delete-message" data-id="@g.userChallengeId"><a href="#" class="goal-delete-ajax" data-id="@g.userChallengeId">Delete</a></div></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
+    <script>
     window.onload = function () {
         jQuery(document).ready(function () {
             jQuery('.goal-delete-ajax').click(function (event) {
@@ -131,4 +133,16 @@
             });
         });
     };
-</script>
+    </script>
+} else
+{
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3>Apologies, but the Health Dashboard is currently unavailable.</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+}
