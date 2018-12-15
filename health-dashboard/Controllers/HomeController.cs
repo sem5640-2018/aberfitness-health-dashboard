@@ -351,16 +351,24 @@ namespace health_dashboard.Controllers
             RemoveDataViewModel vm = new RemoveDataViewModel();
             List<HealthActivity> allActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
 
-            if (allActivities.Count > 0)
+            if (allActivities != null)
             {
-                vm.Activities = allActivities.ToPagedList(page, 20);
-                vm.ActivityTypes = await GetHealthDataActivityTypes();
-                vm.RenderTable = true;
-            }
-            else
+                if (allActivities.Count > 0)
+                {
+                    vm.Activities = allActivities.ToPagedList(page, 20);
+                    vm.ActivityTypes = await GetHealthDataActivityTypes();
+                    vm.RenderTable = true;
+                }
+                else
+                {
+                    vm.Message = "You don't have any activities recorded. Would you like to <a href='" + Url.Action("Input", "Home") + "'>record one?</a>";
+                    vm.RenderTable = false;
+                }
+
+                vm.HealthDataRepositoryConnectionSuccessful = true;
+            } else
             {
-                vm.Message = "You don't have any activities recorded. Would you like to <a href='" + Url.Action("Input", "Home") + "'>record one?</a>";
-                vm.RenderTable = false;
+                vm.HealthDataRepositoryConnectionSuccessful = false;
             }
 
             return View(vm);
