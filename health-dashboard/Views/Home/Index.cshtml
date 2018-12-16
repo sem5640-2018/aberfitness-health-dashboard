@@ -29,30 +29,33 @@
     </div>
 
     <div class="row">
-        <div class="col-xl-9 col-lg-8 col-md-6">
+        <div class="@(Model.FitBitIngestConnectionSuccessful ? "col-xl-9 col-lg-8 col-md-6" : "col-lg-12")">
             <div class="card">
                 <div class="card-body">
                     <canvas id="distanceChart"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-4 col-md-6">
-            <div class="card">
-                <div class="card-body text-center">
-                    <div style="height: 100px">
-                        @if (!Model.IsFitBitConnected)
-                        {
-                            <a href="@Model.FitBitConnectUrl" style="white-space: normal;" class="btn btn-success align-middle">Connect your FitBit</a>
-                        }
-                        else
-                        {
-                            <a href="@Model.FitBitDisconnectUrl" style="white-space: normal;" class="btn btn-success align-middle">Disconnect your FitBit</a>
+        @if (Model.FitBitIngestConnectionSuccessful)
+        {
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div style="height: 100px">
+                            @if (!Model.IsFitBitConnected)
+                            {
+                                <a href="@Model.FitBitConnectUrl" style="white-space: normal;" class="btn btn-success align-middle">Connect your FitBit</a>
+                            }
+                            else
+                            {
+                                <a href="@Model.FitBitDisconnectUrl" style="white-space: normal;" class="btn btn-success align-middle">Disconnect your FitBit</a>
+                            }
                             <p>This may take up to an hour to update.</p>
-                        }
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        }
     </div>
 
     <div class="row">
@@ -190,7 +193,7 @@
                             labels: [
                                 @foreach (KeyValuePair<DateTime, List<HealthActivity>> day in Model.ActivitiesByDate)
                                 {
-                                    @Html.Raw(string.Concat('"', day.Key.ToShortDateString(), "\","));
+                                    @Html.Raw(string.Concat('"', day.Key.ToString("dd-MM-yyyy"), "\","));
                                 }
                             ],
                             datasets: [{

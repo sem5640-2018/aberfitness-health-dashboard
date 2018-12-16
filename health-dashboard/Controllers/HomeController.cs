@@ -86,10 +86,11 @@ namespace health_dashboard.Controllers
                 ChallengeJoinUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage",
                 Distances = new SortedDictionary<int, double>(),
                 Goals = await GetPersonalGoals(weekAgo, today),
-                IsFitBitConnected = await GetIsFitbitConnected(),
+                IsFitBitConnected = await GetIsFitBitConnected(),
                 FitBitConnectUrl = AppConfig.GetValue<string>("FitBitIngestServiceUrl") + "LoginPage",
                 FitBitDisconnectUrl = "https://www.fitbit.com/settings/applications",
             };
+            vm.FitBitIngestConnectionSuccessful = vm.IsFitBitConnected == null;
 
             if (vm.ActivityTypes == null)
             {
@@ -443,7 +444,7 @@ namespace health_dashboard.Controllers
             return null;
         }
 
-        private async Task<bool?> GetIsFitbitConnected()
+        private async Task<bool?> GetIsFitBitConnected()
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             var response = await Client.GetAsync(AppConfig.GetValue<string>("FitBitIngestServiceUrl") + "api/Check?userId=" + userId);
@@ -604,6 +605,7 @@ namespace health_dashboard.Controllers
     {
         public bool HealthDataRepositoryConnectionSuccessful { get; set; }
         public bool ChallengesConnectionSuccessful { get; set; }
+        public bool FitBitIngestConnectionSuccessful { get; set; }
         public SortedDictionary<DateTime, List<HealthActivity>> ActivitiesByDate { get; set; }
         public SortedDictionary<int, double> Distances { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
