@@ -89,6 +89,7 @@ namespace health_dashboard.Controllers
                 IsFitBitConnected = await GetIsFitBitConnected(),
                 FitBitConnectUrl = AppConfig.GetValue<string>("FitBitIngestServiceUrl") + "LoginPage",
                 FitBitDisconnectUrl = "https://www.fitbit.com/settings/applications",
+                UserGroupsJoinUrl = AppConfig.GetValue<string>("UserGroupsUrl")
             };
             vm.FitBitIngestConnectionSuccessful = vm.IsFitBitConnected == null;
 
@@ -110,15 +111,9 @@ namespace health_dashboard.Controllers
                 }
 
                 List<HealthActivity> apiActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, thirtyDaysAgo, today);
+                vm.HasActivities = apiActivities.Count > 0;
+
                 SortedDictionary<DateTime, List<HealthActivity>> activitiesByDate = new SortedDictionary<DateTime, List<HealthActivity>>();
-                /*
-                 *  activitiesByDate = [
-                 *      [date] => [
-                 *          HealthActivity,
-                 *      ],
-                 *  ]
-                 *
-                 **/
 
                 foreach (var a in apiActivities)
                 {
@@ -607,6 +602,7 @@ namespace health_dashboard.Controllers
         public bool ChallengesConnectionSuccessful { get; set; }
         public bool FitBitIngestConnectionSuccessful { get; set; }
         public SortedDictionary<DateTime, List<HealthActivity>> ActivitiesByDate { get; set; }
+        public bool HasActivities { get; set; }
         public SortedDictionary<int, double> Distances { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
         public List<UserChallenge> Challenges { get; set; }
@@ -615,6 +611,7 @@ namespace health_dashboard.Controllers
         public bool? IsFitBitConnected { get; set; }
         public string FitBitConnectUrl { get; set; }
         public string FitBitDisconnectUrl { get; set; }
+        public string UserGroupsJoinUrl { get; set; }
     }
 
     public class InputViewModel

@@ -32,7 +32,13 @@
         <div class="@(Model.FitBitIngestConnectionSuccessful ? "col-xl-9 col-lg-8 col-md-6" : "col-lg-12")">
             <div class="card">
                 <div class="card-body">
-                    <canvas id="distanceChart"></canvas>
+                    @if (Model.HasActivities)
+                    {
+                        <canvas id="distanceChart"></canvas>
+                    } else
+                    {
+                        <p>You have no activities. Would you a like to <a href="@Url.Action("Input", "Dashboard")">add one</a>?</p>
+                    }
                 </div>
             </div>
         </div>
@@ -109,7 +115,10 @@
                                 <span>You currently have no group challenges.</span>
                             </div>
                             <div class="">
-                                <span>Would you like to join one?</span>
+                                <span>If you are part of a group, would you like to <a href="@Model.ChallengeJoinUrl">join one</a>?</span>
+                            </div>
+                            <div class="">
+                                <span>If you are not part of a group, would you like to <a href="@Model.UserGroupsJoinUrl">join a group</a>?</span>
                             </div>
                             <br />
                         }
@@ -151,7 +160,7 @@
                                 <span>You currently have no personal goals.</span>
                             </div>
                             <div class="">
-                                <span>Would you like to make one?</span>
+                                <span>Would you like to <a href="@Url.Action("Goals","Dashboard")">make one</a>?</span>
                             </div>
                             <br />
                         }
@@ -169,7 +178,7 @@
                                 <span>@g.percentageComplete% Complete</span>
                             </div>
                             <div>
-                                <span>until @ch.challenge.endDateTime.ToString("dd/MM/yyyy HH:mm:ss")</span>
+                                <span>until @g.challenge.endDateTime.ToString("dd/MM/yyyy HH:mm:ss")</span>
                             </div>
                             <br />
                             <div class="clearfix"></div>
@@ -237,14 +246,15 @@
                 })();
 
                 (function () {
-                    var ctx = document.getElementById("distanceChart");
-                    ctx.height = 100;
-                    var myChart = new Chart(ctx, {
-                        type: 'horizontalBar',
-                        data: {
-                            labels: ["Distance (m)"],
+                    if (jQuery('#distanceChart').length == 1) {
+                        var ctx = document.getElementById("distanceChart");
+                        ctx.height = 100;
+                        var myChart = new Chart(ctx, {
+                            type: 'horizontalBar',
+                            data: {
+                                labels: ["Distance (m)"],
 
-                            datasets: [
+                                datasets: [
                                 @{ var rand = new Random();}
                                 @foreach (KeyValuePair<int, double> distance in Model.Distances)
                                 {
@@ -254,49 +264,50 @@
                                         @:label: "@ActivityTypeStrings[distance.Key]"
                                     @:},
                                 }
-                            ]
-                        },
-                        options: {
-                            maintainAspectRatio: false,
-                            tooltips: {
-                                enabled: false
+                                ]
                             },
-                            hover: {
-                                animationDuration: 0
-                            },
-                            scales: {
-                                xAxes: [{
-                                    ticks: {
-                                        beginAtZero: true,
-                                        fontFamily: "'Open Sans Bold', sans-serif",
-                                        fontSize: 11
-                                    },
-                                    scaleLabel: {
-                                        display: false
-                                    },
-                                    gridLines: {
-                                    },
-                                    stacked: true
-                                }],
-                                yAxes: [{
-                                    gridLines: {
-                                        display: false,
-                                        color: "#fff",
-                                        zeroLineColor: "#fff",
-                                        zeroLineWidth: 0
-                                    },
-                                    ticks: {
-                                        fontFamily: "'Open Sans Bold', sans-serif",
-                                        fontSize: 11
-                                    },
-                                    stacked: true
-                                }]
-                            },
+                            options: {
+                                maintainAspectRatio: false,
+                                tooltips: {
+                                    enabled: false
+                                },
+                                hover: {
+                                    animationDuration: 0
+                                },
+                                scales: {
+                                    xAxes: [{
+                                        ticks: {
+                                            beginAtZero: true,
+                                            fontFamily: "'Open Sans Bold', sans-serif",
+                                            fontSize: 11
+                                        },
+                                        scaleLabel: {
+                                            display: false
+                                        },
+                                        gridLines: {
+                                        },
+                                        stacked: true
+                                    }],
+                                    yAxes: [{
+                                        gridLines: {
+                                            display: false,
+                                            color: "#fff",
+                                            zeroLineColor: "#fff",
+                                            zeroLineWidth: 0
+                                        },
+                                        ticks: {
+                                            fontFamily: "'Open Sans Bold', sans-serif",
+                                            fontSize: 11
+                                        },
+                                        stacked: true
+                                    }]
+                                },
 
-                            pointLabelFontFamily: "Quadon Extra Bold",
-                            scaleFontFamily: "Quadon Extra Bold",
-                        }
-                    });
+                                pointLabelFontFamily: "Quadon Extra Bold",
+                                scaleFontFamily: "Quadon Extra Bold",
+                            }
+                        });
+                    }
                 })();
 
                 (function () {
