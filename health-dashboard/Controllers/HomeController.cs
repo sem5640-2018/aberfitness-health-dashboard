@@ -57,6 +57,7 @@ namespace health_dashboard.Controllers
             vm.Goals = await GetPersonalGoals();
             vm.GoalMetrics = await GetGoalMetrics();
             vm.HealthDataRepositoryConnectionSuccessful = vm.ActivityTypes != null;
+            vm.ChallengeUpdateUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage/Edit/";
 
             return View(vm);
         }
@@ -84,6 +85,7 @@ namespace health_dashboard.Controllers
                 ActivityTypes = await GetHealthDataActivityTypes(),
                 Challenges = await GetGroupChallenges(),
                 ChallengeJoinUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage",
+                ChallengeUpdateUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage/Edit/",
                 Distances = new SortedDictionary<int, double>(),
                 Goals = await GetPersonalGoals(),
                 IsFitBitConnected = await GetIsFitBitConnected(),
@@ -91,7 +93,7 @@ namespace health_dashboard.Controllers
                 FitBitDisconnectUrl = "https://www.fitbit.com/settings/applications",
                 UserGroupsJoinUrl = AppConfig.GetValue<string>("UserGroupsUrl")
             };
-            vm.FitBitIngestConnectionSuccessful = vm.IsFitBitConnected == null;
+            vm.FitBitIngestConnectionSuccessful = vm.IsFitBitConnected != null;
 
             if (vm.ActivityTypes == null)
             {
@@ -583,6 +585,7 @@ namespace health_dashboard.Controllers
         public List<UserChallenge> Goals { get; set; }
         public List<GoalMetric> GoalMetrics { get; set; }
         public string Message { get; set; }
+        public string ChallengeUpdateUrl { get; internal set; }
     }
 
     public class IndexViewModel
@@ -596,6 +599,7 @@ namespace health_dashboard.Controllers
         public List<ActivityType> ActivityTypes { get; set; }
         public List<UserChallenge> Challenges { get; set; }
         public string ChallengeJoinUrl { get; set; }
+        public string ChallengeUpdateUrl { get; internal set; }
         public List<UserChallenge> Goals { get; set; }
         public bool? IsFitBitConnected { get; set; }
         public string FitBitConnectUrl { get; set; }
