@@ -284,11 +284,11 @@ namespace health_dashboard.Controllers
                                 activityOccurences[totalActivityKey] = 1;
                                 userActivitiesCombined.Add(healthActivityTotal);
                             }
-                            else
-                            {
-                                vm.Message = "Nobody in your group currently has any activity data, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some</a>?";
-                                renderTables = false;
-                            }
+                        }
+                        if(userActivitiesCombined.Count == 0)
+                        {
+                            vm.Message = "Nobody in your group currently has any activity data, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some</a>?";
+                            renderTables = false;
                         }
                         foreach (KeyValuePair<int, int> entry in activityOccurences)
                         {
