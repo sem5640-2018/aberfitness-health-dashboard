@@ -193,7 +193,7 @@
                             labels: [
                                 @foreach (KeyValuePair<DateTime, List<HealthActivity>> day in Model.ActivitiesByDate)
                                 {
-                                    @Html.Raw(string.Concat('"', day.Key.ToShortDateString(), "\","));
+                                    @Html.Raw(string.Concat('"', day.Key.ToString("dd-MM-yyyy"), "\","));
                                 }
                             ],
                             datasets: [{
