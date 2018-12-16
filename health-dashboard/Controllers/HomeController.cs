@@ -112,7 +112,6 @@ namespace health_dashboard.Controllers
 
                 List<HealthActivity> apiActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, thirtyDaysAgo, today);
                 vm.HasActivities = apiActivities.Count > 0;
-
                 SortedDictionary<DateTime, List<HealthActivity>> activitiesByDate = new SortedDictionary<DateTime, List<HealthActivity>>();
 
                 foreach (var a in apiActivities)
