@@ -127,7 +127,7 @@
                                 <span>@ch.percentageComplete% Complete </span>
                             </div>
                             <div>
-                                <span>until @ch.challenge.endDateTime.ToString("dd/MM/yyyy hh:mm:ss")</span>
+                                <span>until @ch.challenge.endDateTime.ToString("dd/MM/yyyy HH:mm:ss")</span>
                             </div>
                             <br />
                             <div class="clearfix"></div>
@@ -167,6 +167,9 @@
                             </div>
                             <div>
                                 <span>@g.percentageComplete% Complete</span>
+                            </div>
+                            <div>
+                                <span>until @ch.challenge.endDateTime.ToString("dd/MM/yyyy HH:mm:ss")</span>
                             </div>
                             <br />
                             <div class="clearfix"></div>
@@ -253,7 +256,6 @@
                                 }
                             ]
                         },
-
                         options: {
                             maintainAspectRatio: false,
                             tooltips: {
