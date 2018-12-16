@@ -77,19 +77,21 @@ namespace health_dashboard.Controllers
         public async Task<IActionResult> Index()
         {
             DateTime today = DateTime.Today;
-            DateTime weekAgo = DateTime.Today.AddDays(-7);
+            DateTime thirtyDaysAgo = DateTime.Today.AddDays(-30);
 
             IndexViewModel vm = new IndexViewModel
             {
                 ActivityTypes = await GetHealthDataActivityTypes(),
-                Challenges = await GetGroupChallenges(weekAgo, today),
+                Challenges = await GetGroupChallenges(),
                 ChallengeJoinUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage",
                 Distances = new SortedDictionary<int, double>(),
-                Goals = await GetPersonalGoals(weekAgo, today),
-                IsFitBitConnected = await GetIsFitbitConnected(),
+                Goals = await GetPersonalGoals(),
+                IsFitBitConnected = await GetIsFitBitConnected(),
                 FitBitConnectUrl = AppConfig.GetValue<string>("FitBitIngestServiceUrl") + "LoginPage",
                 FitBitDisconnectUrl = "https://www.fitbit.com/settings/applications",
+                UserGroupsJoinUrl = AppConfig.GetValue<string>("UserGroupsUrl")
             };
+            vm.FitBitIngestConnectionSuccessful = vm.IsFitBitConnected == null;
 
             if (vm.ActivityTypes == null)
             {
@@ -107,17 +109,10 @@ namespace health_dashboard.Controllers
                     }
                     vm.Distances[ha.activityTypeId] += ha.metresTravelled;
                 }
-                List<HealthActivity> apiActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, weekAgo, today);
 
+                List<HealthActivity> apiActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, thirtyDaysAgo, DateTime.Now);
+                vm.HasActivities = apiActivities.Count > 0;
                 SortedDictionary<DateTime, List<HealthActivity>> activitiesByDate = new SortedDictionary<DateTime, List<HealthActivity>>();
-                /*
-                 *  activitiesByDate = [
-                 *      [date] => [
-                 *          HealthActivity,
-                 *      ],
-                 *  ]
-                 *
-                 **/
 
                 foreach (var a in apiActivities)
                 {
@@ -134,7 +129,7 @@ namespace health_dashboard.Controllers
                 }
 
                 // Add a zero activity to the data shown by the graph for days with no activity data
-                for (DateTime day = weekAgo; day <= today; day = day.AddDays(1)) {
+                for (DateTime day = thirtyDaysAgo; day <= today; day = day.AddDays(1)) {
                     if (!activitiesByDate.ContainsKey(day.Date))
                     {
                         activitiesByDate.Add(
@@ -288,11 +283,11 @@ namespace health_dashboard.Controllers
                                 activityOccurences[totalActivityKey] = 1;
                                 userActivitiesCombined.Add(healthActivityTotal);
                             }
-                            else
-                            {
-                                vm.Message = "Nobody in your group currently has any activity data, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some</a>?";
-                                renderTables = false;
-                            }
+                        }
+                        if(userActivitiesCombined.Count == 0)
+                        {
+                            vm.Message = "Nobody in your group currently has any activity data, would you like to <a href=" + AppConfig.GetValue<string>("ChallengeUrl") + "userchallenges" + ">make some</a>?";
+                            renderTables = false;
                         }
                         foreach (KeyValuePair<int, int> entry in activityOccurences)
                         {
@@ -407,13 +402,8 @@ namespace health_dashboard.Controllers
             return await Client.DeleteAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/" + id);
         }
 
-        private async Task<List<UserChallenge>> GetGroupChallenges(DateTime? from = null, DateTime? to = null)
+        private async Task<List<UserChallenge>> GetGroupChallenges()
         {
-            if (from == null ^ to == null)
-            {
-                throw new ArgumentException("Either both or neither 'from' and 'to' dates must be specified.");
-            }
-
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/getGroup/" + userId);
             if (response.IsSuccessStatusCode)
@@ -443,7 +433,7 @@ namespace health_dashboard.Controllers
             return null;
         }
 
-        private async Task<bool?> GetIsFitbitConnected()
+        private async Task<bool?> GetIsFitBitConnected()
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             var response = await Client.GetAsync(AppConfig.GetValue<string>("FitBitIngestServiceUrl") + "api/Check?userId=" + userId);
@@ -454,13 +444,8 @@ namespace health_dashboard.Controllers
             return null;
         }
 
-        private async Task<List<UserChallenge>> GetPersonalGoals(DateTime? from = null, DateTime? to = null)
+        private async Task<List<UserChallenge>> GetPersonalGoals()
         {
-            if (from == null ^ to == null)
-            {
-                throw new ArgumentException("Either both or neither 'from' and 'to' dates must be specified.");
-            }
-
             var userId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             var response = await Client.GetAsync(AppConfig.GetValue<string>("ChallengeUrl") + "api/challengesManage/getPersonal/" + userId);
             if (response.IsSuccessStatusCode)
@@ -490,7 +475,7 @@ namespace health_dashboard.Controllers
             string path = AppConfig.GetValue<string>("HealthDataRepositoryUrl") + "api/Activities/ByUser/" +  userId;
             if (from != null)
             {
-                path += "?from=" + from.Value.ToString("yyyy-MM-dd") + "&to=" + to.Value.ToString("yyyy-MM-dd");
+                path += "?from=" + from.Value.ToString("yyyy-MM-ddTHH:mm:ss") + "&to=" + to.Value.ToString("yyyy-MM-ddTHH:mm:ss");
             }
 
             var response = await Client.GetAsync(path);
@@ -604,7 +589,9 @@ namespace health_dashboard.Controllers
     {
         public bool HealthDataRepositoryConnectionSuccessful { get; set; }
         public bool ChallengesConnectionSuccessful { get; set; }
+        public bool FitBitIngestConnectionSuccessful { get; set; }
         public SortedDictionary<DateTime, List<HealthActivity>> ActivitiesByDate { get; set; }
+        public bool HasActivities { get; set; }
         public SortedDictionary<int, double> Distances { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
         public List<UserChallenge> Challenges { get; set; }
@@ -613,6 +600,7 @@ namespace health_dashboard.Controllers
         public bool? IsFitBitConnected { get; set; }
         public string FitBitConnectUrl { get; set; }
         public string FitBitDisconnectUrl { get; set; }
+        public string UserGroupsJoinUrl { get; set; }
     }
 
     public class InputViewModel
