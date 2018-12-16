@@ -87,19 +87,21 @@
                                 <th>Amount Completed</th>
                                 <th>Required</th>
                                 <th>Time Period</th>
+                                <th>Update Goal</th>
                                 <th>Delete Goal</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var g in Model.Goals)
                             {
-                                <tr>
-                                    <td>@g.challenge.activity.activityName</td>
-                                    <td>@(Math.Floor((double)((int)g.challenge.goal * (int)g.percentageComplete / 100))) @g.challenge.GoalMetric.GoalMetricDisplay</td>
-                                    <td>@g.challenge.goal @g.challenge.GoalMetric.GoalMetricDisplay</td>
-                                    <td>@g.challenge.startDateTime - @g.challenge.endDateTime</td>
-                                    <td><div class="goal-delete-message" data-id="@g.userChallengeId"><a href="#" class="goal-delete-ajax" data-id="@g.userChallengeId">Delete</a></div></td>
-                                </tr>
+                            <tr>
+                                <td>@g.challenge.activity.activityName</td>
+                                <td>@(Math.Floor((double)((int)g.challenge.goal * (int)g.percentageComplete / 100))) @g.challenge.GoalMetric.GoalMetricDisplay</td>
+                                <td>@g.challenge.goal @g.challenge.GoalMetric.GoalMetricDisplay</td>
+                                <td>@g.challenge.startDateTime - @g.challenge.endDateTime</td>
+                                <td><a href="@(Model.ChallengeUpdateUrl + g.challenge.challengeId)">Update</a></td>
+                                <td><div class="goal-delete-message" data-id="@g.userChallengeId"><a href="#" class="goal-delete-ajax" data-id="@g.userChallengeId">Delete</a></div></td>
+                            </tr>
                             }
                         </tbody>
                     </table>
