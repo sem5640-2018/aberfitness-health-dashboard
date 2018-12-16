@@ -77,15 +77,15 @@ namespace health_dashboard.Controllers
         public async Task<IActionResult> Index()
         {
             DateTime today = DateTime.Today;
-            DateTime weekAgo = DateTime.Today.AddDays(-7);
+            DateTime thirtyDaysAgo = DateTime.Today.AddDays(-30);
 
             IndexViewModel vm = new IndexViewModel
             {
                 ActivityTypes = await GetHealthDataActivityTypes(),
-                Challenges = await GetGroupChallenges(weekAgo, today),
+                Challenges = await GetGroupChallenges(thirtyDaysAgo, today),
                 ChallengeJoinUrl = AppConfig.GetValue<string>("ChallengeUrl") + "challengesManage",
                 Distances = new SortedDictionary<int, double>(),
-                Goals = await GetPersonalGoals(weekAgo, today),
+                Goals = await GetPersonalGoals(thirtyDaysAgo, today),
                 IsFitBitConnected = await GetIsFitBitConnected(),
                 FitBitConnectUrl = AppConfig.GetValue<string>("FitBitIngestServiceUrl") + "LoginPage",
                 FitBitDisconnectUrl = "https://www.fitbit.com/settings/applications",
@@ -108,8 +108,8 @@ namespace health_dashboard.Controllers
                     }
                     vm.Distances[ha.activityTypeId] += ha.metresTravelled;
                 }
-                List<HealthActivity> apiActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, weekAgo, today);
 
+                List<HealthActivity> apiActivities = await GetUserActivities(User.Claims.FirstOrDefault(c => c.Type == "sub").Value, thirtyDaysAgo, today);
                 SortedDictionary<DateTime, List<HealthActivity>> activitiesByDate = new SortedDictionary<DateTime, List<HealthActivity>>();
                 /*
                  *  activitiesByDate = [
@@ -135,7 +135,7 @@ namespace health_dashboard.Controllers
                 }
 
                 // Add a zero activity to the data shown by the graph for days with no activity data
-                for (DateTime day = weekAgo; day <= today; day = day.AddDays(1)) {
+                for (DateTime day = thirtyDaysAgo; day <= today; day = day.AddDays(1)) {
                     if (!activitiesByDate.ContainsKey(day.Date))
                     {
                         activitiesByDate.Add(
